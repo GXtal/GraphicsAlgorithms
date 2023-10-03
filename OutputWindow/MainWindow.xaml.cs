@@ -27,7 +27,7 @@ public partial class MainWindow : Window
 
     float CameraPosX { get; set; }
     float CameraPosY { get; set; }
-    float CameraPosZ { get; set; } = 500;
+    float CameraPosZ { get; set; } = 20;
     float CameraFov { get; set; } = (float)(Math.PI / 4);
     float CameraZNear { get; set; } = 1f;
     float CameraZFar { get; set; } = 100.0f;
@@ -50,29 +50,6 @@ public partial class MainWindow : Window
         //C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj
         //"C:\\Users\\admin\\Desktop\\Toilet.obj"
         //"C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj"
-        object1.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
-        ScreenWidth = (float)this.Width;
-        ScreenHeight = (float)this.Height;
-        bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
-        MainImage.Source = bitmap.Source;
-        TargetPosX = object1.PositionX;
-        TargerPosY = object1.PositionY;
-        TargetPosZ = object1.PositionZ;
-        var modelMatrix = object1.CreateWorldMatrix();
-        var viewMatrix = Matrixes.CreateObserverMatrix(new Vector3(CameraPosX, CameraPosY, CameraPosZ), new Vector3(TargetPosX, TargerPosY, TargetPosZ));
-        var projectionMatrix = Matrixes.CreateProjectionMatrix(CameraFov, ScreenWidth / ScreenHeight, CameraZNear, CameraZFar);
-        var modelViewProjectionMatrix = modelMatrix * viewMatrix * projectionMatrix;
-        var viewPortMatrix = Matrixes.CreateViewPortMatrix(ScreenWidth, ScreenHeight);
-
-        windowVertices = new Vector4[object1.Vertexes.Count];
-        for (int i = 0; i < windowVertices.Length; i++)
-        {
-            windowVertices[i] = Vector4.Transform(object1.Vertexes[i], modelViewProjectionMatrix);
-            windowVertices[i] /= windowVertices[i].W;
-            windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
-        }
-
-        DrawModel(windowVertices, object1);
     }
 
 
@@ -97,7 +74,7 @@ public partial class MainWindow : Window
 
                     int xPixel = (int)x;
                     int yPixel = (int)y;
-                    if (xPixel  < 0 || xPixel >= ScreenWidth || yPixel < 0 || yPixel >= ScreenHeight)
+                    if (xPixel  < 0 || xPixel >= (int)ScreenWidth || yPixel < 0 || yPixel >= (int)ScreenHeight)
                     {
                         continue;
                     }
@@ -185,8 +162,8 @@ public partial class MainWindow : Window
         {
             bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
             MainImage.Source = bitmap.Source;
-            ScreenWidth = (float)this.Width;
-            ScreenHeight = (float)this.Height;
+            ScreenWidth = (float)MainGrid.ActualWidth;
+            ScreenHeight = (float)MainGrid.ActualHeight;
         }
         var modelMatrix = object1.CreateWorldMatrix();
         var viewMatrix = Matrixes.CreateObserverMatrix(new Vector3(CameraPosX, CameraPosY, CameraPosZ), new Vector3(TargetPosX, TargerPosY, TargetPosZ));
@@ -204,5 +181,59 @@ public partial class MainWindow : Window
         
 
         DrawModel(windowVertices, object1);
+    }
+
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        object1.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        ScreenWidth = (float)MainGrid.ActualWidth;
+        ScreenHeight = (float)MainGrid.ActualHeight;
+        bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
+        MainImage.Source = bitmap.Source;
+        TargetPosX = object1.PositionX;
+        TargerPosY = object1.PositionY;
+        TargetPosZ = object1.PositionZ;
+        var modelMatrix = object1.CreateWorldMatrix();
+        var viewMatrix = Matrixes.CreateObserverMatrix(new Vector3(CameraPosX, CameraPosY, CameraPosZ), new Vector3(TargetPosX, TargerPosY, TargetPosZ));
+        var projectionMatrix = Matrixes.CreateProjectionMatrix(CameraFov, ScreenWidth / ScreenHeight, CameraZNear, CameraZFar);
+        var modelViewProjectionMatrix = modelMatrix * viewMatrix * projectionMatrix;
+        var viewPortMatrix = Matrixes.CreateViewPortMatrix(ScreenWidth, ScreenHeight);
+
+        windowVertices = new Vector4[object1.Vertexes.Count];
+        for (int i = 0; i < windowVertices.Length; i++)
+        {
+            windowVertices[i] = Vector4.Transform(object1.Vertexes[i], modelViewProjectionMatrix);
+            windowVertices[i] /= windowVertices[i].W;
+            windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
+        }
+
+        DrawModel(windowVertices, object1);
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ScreenWidth = (float)MainGrid.ActualWidth;
+        ScreenHeight = (float)MainGrid.ActualHeight;
+        bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
+        MainImage.Source = bitmap.Source;
+        TargetPosX = object1.PositionX;
+        TargerPosY = object1.PositionY;
+        TargetPosZ = object1.PositionZ;
+        var modelMatrix = object1.CreateWorldMatrix();
+        var viewMatrix = Matrixes.CreateObserverMatrix(new Vector3(CameraPosX, CameraPosY, CameraPosZ), new Vector3(TargetPosX, TargerPosY, TargetPosZ));
+        var projectionMatrix = Matrixes.CreateProjectionMatrix(CameraFov, ScreenWidth / ScreenHeight, CameraZNear, CameraZFar);
+        var modelViewProjectionMatrix = modelMatrix * viewMatrix * projectionMatrix;
+        var viewPortMatrix = Matrixes.CreateViewPortMatrix(ScreenWidth, ScreenHeight);
+
+        windowVertices = new Vector4[object1.Vertexes.Count];
+        for (int i = 0; i < windowVertices.Length; i++)
+        {
+            windowVertices[i] = Vector4.Transform(object1.Vertexes[i], modelViewProjectionMatrix);
+            windowVertices[i] /= windowVertices[i].W;
+            windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
+        }
+
+        DrawModel(windowVertices, object1);
+
     }
 }
