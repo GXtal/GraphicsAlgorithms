@@ -7,18 +7,18 @@ namespace GraphicsAlgorithms;
 
 public class Object3D
 {
-    List<Vector3> Vertexes { get; set; } = new();
-    List<List<int>> Faces { get; set; } = new();
+    public List<Vector3> Vertexes { get; } = new();
+    public List<List<int>> Faces { get; } = new();
 
-    float PositionX { get; set; }
-    float PositionY { get; set; }
-    float PositionZ { get; set; }
-    float RotationX { get; set; }
-    float RotationY { get; set; }
-    float RotationZ { get; set; }
-    float ScaleX { get; set; }
-    float ScaleY { get; set; }
-    float ScaleZ { get; set; }
+    public float PositionX { get; set; }
+    public float PositionY { get; set; }
+    public  float PositionZ { get; set; } = -3.0f;
+    public float RotationX { get; set; }
+    public float RotationY { get; set; }
+    public float RotationZ { get; set; }
+    public float ScaleX { get; set; } = 1;
+    public float ScaleY { get; set; } = 1;
+    public float ScaleZ { get; set; } = 1;
 
     private Matrix4x4 CreateObserverMatrixB(Vector3 cameraPosition)
     {              
@@ -35,15 +35,7 @@ public class Object3D
             0f,         0f,         0f,         1f));
     }
 
-    private Matrix4x4 CreateObserverMatrix(Vector3 cameraPosition)
-    {
-        Vector3 target = new Vector3(0f, 0f, 0f);
-        Vector3 up = new Vector3(0f, 1f, 0f);
-
-        return Matrix4x4.CreateLookAt(cameraPosition, target, up);        
-    }
-
-    private Matrix4x4 CreateWorldMatrix()
+    public Matrix4x4 CreateWorldMatrix()
     {
 
         Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(PositionX, PositionY, PositionZ);
@@ -54,7 +46,7 @@ public class Object3D
                                    Matrix4x4.CreateRotationY(RotationY) *
                                    Matrix4x4.CreateRotationZ(RotationZ);
         
-        Matrix4x4 worldMatrix = translationMatrix * scaleMatrix * rotationMatrix;
+        Matrix4x4 worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
 
 
         return worldMatrix;

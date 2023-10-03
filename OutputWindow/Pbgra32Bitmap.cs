@@ -62,5 +62,14 @@ namespace Rasterization
         {
             *(int*)GetPixelAddress(x, y) = 0;
         }
+
+        public void ClearWriteableBitmap(Vector3 color)
+        {
+
+            for (int i = 0; i < PixelWidth * PixelHeight; i++)
+                SetPixel(i % PixelWidth, i / PixelWidth, color);
+
+
+        }
     }
 }
