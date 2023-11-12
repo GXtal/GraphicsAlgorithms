@@ -22,6 +22,8 @@ namespace OutputWindow;
 /// </summary>
 public partial class MainWindow : Window
 {
+    bool isMouseDown = false;
+    Point oldP = new Point(0, 0);   
     float ScreenWidth { get; set; }
     float ScreenHeight { get; set; }
 
@@ -107,24 +109,6 @@ public partial class MainWindow : Window
     {
         switch (e.Key)
         {
-            case Key.W:
-                mainCamera.PositionZ -= 5;
-                break;
-            case Key.S:
-                mainCamera.PositionZ += 5;
-                break;
-            case Key.A:
-                mainCamera.PositionX -= 5;
-                break;
-            case Key.D:
-                mainCamera.PositionX += 5;
-                break;
-            case Key.Q:
-                mainCamera.PositionY += 5;
-                break;
-            case Key.E:
-                mainCamera.PositionY -= 5;
-                break;
             case Key.I:
                 mainModel.RotationX += 0.1f;
                 break;
@@ -189,7 +173,38 @@ public partial class MainWindow : Window
         target.PositionY = mainModel.PositionY;
         target.PositionZ = mainModel.PositionZ;
         EvaluateWindowCoords(mainModel);
+        DrawModel(windowVertices, mainModel);
+    }
 
+    private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        isMouseDown = true;
+        var p = e.GetPosition(MainImage);
+        oldP = p; 
+    }
+
+    private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        isMouseDown = false;
+    }
+
+    private void Window_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (isMouseDown)
+        {
+            var p = e.GetPosition(MainImage);
+            var delta = p - oldP;
+            mainCamera.changeAngles(MathF.PI / 300 * (float)delta.X, MathF.PI / 300 * (float)delta.Y);
+            EvaluateWindowCoords(mainModel);
+            DrawModel(windowVertices, mainModel);
+            oldP = p;
+        }
+    }
+
+    private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        mainCamera.changeDistance(e.Delta / 10f);
+        EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }
 }
