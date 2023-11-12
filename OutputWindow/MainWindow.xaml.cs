@@ -33,6 +33,11 @@ public partial class MainWindow : Window
 
     Pbgra32Bitmap bitmap;
     Vector4[] windowVertices;
+    //Vector3[] projectionVertices;
+
+    float[][] zbuffer;
+    bool[] faceCanBeDrawn;
+    Vector3 eye = new Vector3(0, 0, 0);
 
 
     public void EvaluateWindowCoords(Object3D model) {
@@ -43,14 +48,52 @@ public partial class MainWindow : Window
         var viewPortMatrix = Matrixes.CreateViewPortMatrix(ScreenWidth, ScreenHeight);
 
         windowVertices = new Vector4[model.Vertexes.Count];
+       // projectionVertices = new Vector3[model.Vertexes.Count];
+        eye = mainCamera.getCameraPosition(target.GetPosition());
+        var eyeTmp = Vector4.Transform(eye, modelViewProjectionMatrix);
+        eyeTmp /= eyeTmp.W;
+        eyeTmp = Vector4.Transform(eyeTmp, viewPortMatrix);
+        eye.X = eyeTmp.X;
+        eye.Y = eyeTmp.Y;
+        eye.Z = eyeTmp.Z;
         for (int i = 0; i < windowVertices.Length; i++)
         {
             windowVertices[i] = Vector4.Transform(model.Vertexes[i], modelViewProjectionMatrix);
             windowVertices[i] /= windowVertices[i].W;
+            //projectionVertices[i].X = windowVertices[i].X;
+            //projectionVertices[i].Y = windowVertices[i].Y;
+            //projectionVertices[i].Z = windowVertices[i].Z;
             windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
         }
     }
 
+    public bool ZbufferCanBeDrawn(int i, Vector3 eye)
+    {
+        var aDot = windowVertices[mainModel.Faces[i][0]];
+        var bDot = windowVertices[mainModel.Faces[i][1]];
+        var cDot = windowVertices[mainModel.Faces[i][2]];
+
+        var CA = cDot - bDot;
+        var BA = aDot - bDot;
+        var denominator = (BA.X * CA.Y - BA.Y * CA.X);
+        var eyeFromTarget = eye - target.GetPosition();
+        if (denominator * eyeFromTarget.Z < 0)
+        {
+            faceCanBeDrawn[i] = false;
+        }
+        else
+        {
+            faceCanBeDrawn[i] = true;
+        }
+
+        return faceCanBeDrawn[i];
+    }
+
+
+    public float getNonLinearZValue(float depth)
+    {
+        return (1f / depth - 1f / mainCamera.Znear) / (1f / mainCamera.Zfar - 1f / mainCamera.Znear);
+    }
     public void RasterizationFace(int i)
     {
         var aDot = windowVertices[mainModel.Faces[i][0]];
@@ -87,7 +130,16 @@ public partial class MainWindow : Window
                 {
                     continue;
                 }
-                bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0], mainModel.FacesColor[i][1], mainModel.FacesColor[i][2]));
+
+                //Check z-buffer
+                var depth = aDot.Z * w + bDot.Z * u + cDot.Z * v;
+                var nonLinearDepth = getNonLinearZValue(depth);
+                if (nonLinearDepth < zbuffer[y][x])
+                {
+                    bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0], mainModel.FacesColor[i][1], mainModel.FacesColor[i][2]));
+                    zbuffer[y][x] = nonLinearDepth;
+                }
+                
             } 
         }
     }
@@ -135,7 +187,22 @@ public partial class MainWindow : Window
         }
 
         bitmap.Source.Lock();
-        Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
+        for (var i = 0; i < zbuffer.Length; i++)
+        {
+            for (var j = 0; j < (int)ScreenWidth; ++j)
+            {
+                zbuffer[i][j] = int.MaxValue;
+            }
+        }
+        for (var i = 0; i < mainModel.Faces.Count; ++i)
+        {
+            if (ZbufferCanBeDrawn(i, eye))
+            {
+                RasterizationFace(i);
+            }
+        }
+
+        //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
     }
@@ -202,6 +269,16 @@ public partial class MainWindow : Window
         target.PositionX = mainModel.PositionX;
         target.PositionY = mainModel.PositionY;
         target.PositionZ = mainModel.PositionZ;
+        faceCanBeDrawn = new bool[mainModel.Faces.Count];
+        zbuffer = new float[(int)ScreenHeight][];
+        for (var i = 0; i < zbuffer.Length; i++)
+        {
+            zbuffer[i] = new float[(int)ScreenWidth];
+            for (var j = 0; j < (int)ScreenWidth; ++j)
+            {
+                zbuffer[i][j] = float.MaxValue;
+            }   
+        }
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }
@@ -215,6 +292,15 @@ public partial class MainWindow : Window
         target.PositionX = mainModel.PositionX;
         target.PositionY = mainModel.PositionY;
         target.PositionZ = mainModel.PositionZ;
+        zbuffer = new float[(int)ScreenHeight][];
+        for (var i = 0; i < zbuffer.Length; i++)
+        {
+            zbuffer[i] = new float[(int)ScreenWidth];
+            for (var j = 0; j < (int)ScreenWidth; ++j)
+            {
+                zbuffer[i][j] = float.MaxValue;
+            }
+        }
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }

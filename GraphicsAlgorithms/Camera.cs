@@ -31,6 +31,12 @@ namespace GraphicsAlgorithms
             angleY += dAngleY;
         }
 
+        public Vector3 getCameraPosition(Vector3 target)
+        {
+            Vector3 t = new Vector3(((float)Math.Cos(angleX)) * ((float)Math.Cos(angleY)), ((float)Math.Sin(angleY)), ((float)Math.Sin(angleX)) * ((float)Math.Cos(angleY)));
+            return target + t * distanceToTarget;
+        }
+
 
         public Matrix4x4 CreateObserverMatrix(Vector3 target)
         {
