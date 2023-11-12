@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     Pbgra32Bitmap bitmap;
     Vector4[] windowVertices;
 
+
     public void EvaluateWindowCoords(Object3D model) {
         var modelMatrix = model.CreateWorldMatrix();
         var viewMatrix = mainCamera.CreateObserverMatrix(target.GetPosition());
@@ -49,6 +50,48 @@ public partial class MainWindow : Window
             windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
         }
     }
+
+    public void RasterizationFace(int i)
+    {
+        var aDot = windowVertices[mainModel.Faces[i][0]];
+        var bDot = windowVertices[mainModel.Faces[i][1]];
+        var cDot = windowVertices[mainModel.Faces[i][2]];
+
+        var minX = (int)Math.Min(Math.Min(aDot.X, bDot.X), cDot.X);
+        var maxX = (int)Math.Max(Math.Max(aDot.X, bDot.X), cDot.X);
+        var minY = (int)Math.Min(Math.Min(aDot.Y, bDot.Y), cDot.Y);
+        var maxY = (int)Math.Max(Math.Max(aDot.Y, bDot.Y), cDot.Y);
+
+
+        var CA = cDot - bDot;
+        var BA = aDot - bDot;
+
+        var denominator = (BA.X * CA.Y - BA.Y * CA.X);
+        for(var y = minY; y <= maxY; ++y)
+        {
+            for (var x = minX; x <= maxX; ++x)
+            {
+                if (x < 0 || x >= (int)ScreenWidth || y < 0 || y >= (int)ScreenHeight)
+                {
+                    continue;
+                }
+                var P = new Vector4(x, y, 0, 1);
+                var AP = aDot - P;
+                var BP = bDot - P;
+                var CP = cDot - P;
+
+                var v = (BP.X * AP.Y - BP.Y * AP.X) / denominator;
+                var u = (AP.X * CP.Y - AP.Y * CP.X) / denominator;
+                var w = 1 - u - v;
+                if (v < 0 || u < 0 || w < 0)
+                {
+                    continue;
+                }
+                bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0], mainModel.FacesColor[i][1], mainModel.FacesColor[i][2]));
+            } 
+        }
+    }
+
 
     public void DrawFace(int i)
     {
@@ -92,7 +135,7 @@ public partial class MainWindow : Window
         }
 
         bitmap.Source.Lock();
-        Parallel.For(0, obj.Faces.Count, DrawFace);
+        Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
     }

@@ -9,7 +9,9 @@ public class Object3D
 {
     public List<Vector3> Vertexes { get; } = new();
     public List<List<int>> Faces { get; } = new();
+    public List<List<int>> FacesColor { get; } = new();
 
+    private Random _randomizer = new Random();
     public float PositionX { get; set; }
     public float PositionY { get; set; }
     public  float PositionZ { get; set; } = -3.0f;
@@ -77,6 +79,7 @@ public class Object3D
 
     public void LoadModel(string fileName)
     {
+        var colorIndex = 0;
         foreach (string line in File.ReadLines(fileName))
         {
             string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -92,12 +95,19 @@ public class Object3D
                 else if (args[0] == "f")
                 {
                     List<int> face = new List<int>();
+                    FacesColor.Add(new List<int>());
+                    for (var k = 0; k < 3; ++k)
+                    {
+                        FacesColor[colorIndex].Add(_randomizer.Next(0, 255));
+                    }
+
                     for (int i = 1; i < args.Length; i++)
                     {
                         string[] indexes = args[i].Split('/');
                         face.Add(int.Parse(indexes[0]) - 1);
                     }
                     Faces.Add(face);
+                    colorIndex++;
                 }
             }
         }
