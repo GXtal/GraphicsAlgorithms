@@ -13,12 +13,10 @@ namespace GraphicsAlgorithms
         public float Fov { get; set; } = (float)(Math.PI / 4);
         public float Znear { get; set; } = 1f;
         public float Zfar { get; set; } = 100.0f;
-        public float Theta { get; private set; } = 0.0f;
-        public float Phi { get; private set; } = (float)(Math.PI / 2);
 
-        float distanceToTarget = 500.0f;
-        float angleX = 0;
+        float distanceToTarget = 1500.0f;
         float angleY = 0;
+        float angleX = (float)(Math.PI / 2);
 
 
         public void changeDistance(float distance)
