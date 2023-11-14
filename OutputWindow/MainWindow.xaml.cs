@@ -115,7 +115,16 @@ public partial class MainWindow : Window
         var CAWorld = cDotWorld - aDotWorld;
         var BAWorld = bDotWorld - aDotWorld;
 
-        var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
+        var CBWorld = cDotWorld - bDotWorld;
+        var ABWorld = aDotWorld - bDotWorld;
+
+        var BCWorld = bDotWorld - cDotWorld;
+        var ACWorld = aDotWorld - cDotWorld;
+
+        var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
+        var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
+        var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
+
 
 
         var totalCount = 0;
@@ -150,9 +159,14 @@ public partial class MainWindow : Window
                 if (depth < zbuffer[y][x])
                 {
                     var lightVector = new Vector3(0, 0, 1);
-                    lightVector = Vector3.Normalize(-lightVector);
-                    var light = Vector3.Dot(norm, lightVector);
-                    if (light < 0) light = 0;
+                    lightVector = Vector3.Normalize(-(lightVector - target.GetPosition()));
+                    var lightA = Vector3.Dot(normA, lightVector);
+                    var lightB = Vector3.Dot(normB, lightVector);
+                    var lightC = Vector3.Dot(normC, lightVector);
+                    if (lightA < 0) lightA = 0;
+                    if (lightB < 0) lightB = 0;
+                    if (lightC < 0) lightC = 0;
+                    var light = (lightA + lightB + lightC) / 3;
                     bitmap.SetPixel(x, y, new Vector3(light, light, light));
                     zbuffer[y][x] = depth;
                 }
