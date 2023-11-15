@@ -52,9 +52,9 @@ namespace Rasterization
         public void SetPixel(int x, int y, Vector3 color)
         {
             byte* pixel = GetPixelAddress(x, y);
-            pixel[0] = (byte)(255 * color.Z);
-            pixel[1] = (byte)(255 * color.Y);
-            pixel[2] = (byte)(255 * color.X);
+            pixel[0] = (byte)(color.Z);
+            pixel[1] = (byte)(color.Y);
+            pixel[2] = (byte)(color.X);
             pixel[3] = 255;
         }
 
