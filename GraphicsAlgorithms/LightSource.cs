@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -14,6 +15,7 @@ namespace GraphicsAlgorithms
         float angleX = (float)(Math.PI / 2);
         public byte[] Color { get; private set; } =  new byte[3];
 
+        public float[] ambient = new float[3] { 0f, 0.5f, 0.3f };
 
         public LightSource(byte r, byte g, byte b)
         {

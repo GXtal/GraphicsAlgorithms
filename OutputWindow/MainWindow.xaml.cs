@@ -43,15 +43,24 @@ public partial class MainWindow : Window
     Vector3[] vn;
     int[] countvn;
     Matrix4x4 modelMatrix;
+    Matrix4x4 modelMatrixInvert;
+    Matrix4x4 viewMatrixInvert;
+    Matrix4x4 pojectionInvert;
+    Matrix4x4 viewPortInvert;
     bool isLightChange = false;
 
 
     public void EvaluateWindowCoords(Object3D model) {
         modelMatrix = model.CreateWorldMatrix();
         var viewMatrix = mainCamera.CreateObserverMatrix(target.GetPosition());
+        Matrix4x4.Invert(modelMatrix, out modelMatrixInvert);
+        Matrix4x4.Invert(viewMatrix, out viewMatrixInvert);
         var projectionMatrix = mainCamera.CreateProjectionMatrix(ScreenWidth / ScreenHeight);
         var modelViewProjectionMatrix = modelMatrix * viewMatrix * projectionMatrix;
         var viewPortMatrix = Matrixes.CreateViewPortMatrix(ScreenWidth, ScreenHeight);
+        Matrix4x4.Invert(projectionMatrix, out viewPortInvert);
+        Matrix4x4.Invert(viewPortMatrix, out viewPortInvert);
+
 
         windowVertices = new Vector4[model.Vertexes.Count];
         worldVertices = new Vector3[model.Vertexes.Count];
@@ -140,11 +149,14 @@ public partial class MainWindow : Window
 
                 //Check z-buffer
                 var depth = aDot.Z * w + bDot.Z * u + cDot.Z * v;
+                P.Z = depth;
                 var nPoint = normA * w + normB * u + normC * v; 
                 if (depth < zbuffer[y][x])
                 {
+                    var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewPortInvert);
+
                     var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
-                    lightVector = Vector3.Normalize(-(lightVector));
+                    lightVector = Vector3.Normalize(lightVector - new Vector3(fragPos.X, fragPos.Y, fragPos.Z));
                     var lightA = Vector3.Dot(nPoint, lightVector);
                     if (lightA < 0) lightA = 0;
                     var light = lightA;
@@ -173,7 +185,7 @@ public partial class MainWindow : Window
         {
             for (var j = 0; j < (int)ScreenWidth; ++j)
             {
-                zbuffer[i][j] = int.MaxValue;
+                zbuffer[i][j] = float.MaxValue;
             }
         }
         for (var i = 0; i < mainModel.Faces.Count; ++i)
