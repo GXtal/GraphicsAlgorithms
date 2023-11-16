@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace OutputWindow;
 /// <summary>
@@ -48,6 +49,11 @@ public partial class MainWindow : Window
     Matrix4x4 pojectionInvert;
     Matrix4x4 viewPortInvert;
     bool isLightChange = false;
+
+    Stopwatch stopWatch = new Stopwatch();
+    private int frameCount = 0;
+    private int fps = 0;
+    private DispatcherTimer fpsTimer = new DispatcherTimer();
 
 
     public void EvaluateWindowCoords(Object3D model) {
@@ -158,6 +164,7 @@ public partial class MainWindow : Window
                     var LN = Vector3.Dot(nPoint, lightVector);
                     var defferedLightVector = lightVector - 2 * LN * nPoint;
                     var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
+                    if (RV < 0 ) RV = 0.0f;
                     var lightIntVector = lightSource.GetResultColor(LN, RV);
                     bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
                     zbuffer[y][x] = depth;
@@ -171,6 +178,8 @@ public partial class MainWindow : Window
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
+
+        stopWatch.Restart();
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
             for (var j = 0; j < bitmap.PixelWidth; ++j)
@@ -195,9 +204,30 @@ public partial class MainWindow : Window
             }
         }
 
+        stopWatch.Stop();
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
+    }
+
+    private void FpsTimer_Tick(object sender, EventArgs e)
+    {
+        // Update the text block with FPS value
+        fpsTextBlock.Text = $"Render Time: {fps}";
+
+        // Reset frame count
+        frameCount = 0;
+    }
+
+    private void CompositionTarget_Rendering(object sender, EventArgs e)
+    {
+        // Update frame count
+        frameCount++;
+
+        // Calculate FPS
+        double elapsedMilliSeconds = stopWatch.Elapsed.TotalMilliseconds;
+        fps = (int)(elapsedMilliSeconds);
+        // Reset stopwatch
     }
 
     public MainWindow()
@@ -206,6 +236,7 @@ public partial class MainWindow : Window
         //C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj
         //"C:\\Users\\admin\\Desktop\\Toilet.obj"
         //"C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj"
+
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -276,8 +307,8 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
-        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\sadds\\plane.obj");
+        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
@@ -327,6 +358,16 @@ public partial class MainWindow : Window
                 zbuffer[i][j] = float.MaxValue;
             }   
         }
+        
+       
+        CompositionTarget.Rendering += CompositionTarget_Rendering;
+
+        // Set up the FPS timer (for updating the text block)
+        DispatcherTimer fpsTimer = new DispatcherTimer();
+        fpsTimer.Tick += FpsTimer_Tick;
+        fpsTimer.Interval = TimeSpan.FromSeconds(1);
+        fpsTimer.Start();
+
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }
