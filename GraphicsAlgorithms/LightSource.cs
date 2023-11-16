@@ -13,15 +13,28 @@ namespace GraphicsAlgorithms
         float distanceToTarget = 10.0f;
         float angleY = 0;
         float angleX = (float)(Math.PI / 2);
-        public byte[] Color { get; private set; } =  new byte[3];
+        public float[] DiffuseColor { get; set; } =  new float[] { 1.0f, 1.0f, 1.0f};
+        public float[] AmbientColor { get; set; } = new float[] { 0.5f, 0.3f, 0.4f};
+        public float AmbientIntensity { get; set; } = 0.0f;
+        public float DiffuseIntensity { get; set; } = 1.0f;
 
-        public float[] ambient = new float[3] { 0f, 0.5f, 0.3f };
 
-        public LightSource(byte r, byte g, byte b)
+        public Vector3 GetResultColor(float NL)
         {
-            Color[0] = r;
-            Color[1] = g;
-            Color[2] = b;
+            var result = new Vector3();
+            result.X = AmbientColor[0] * AmbientIntensity + DiffuseColor[0] * DiffuseIntensity * NL;
+            result.Y = AmbientColor[1] * AmbientIntensity + DiffuseColor[1] * DiffuseIntensity * NL;
+            result.Z = AmbientColor[2] * AmbientIntensity + DiffuseColor[2] * DiffuseIntensity * NL;
+
+            result.X = (result.X > 1.0f) ? 1.0f : result.X;
+            result.Y= (result.Y > 1.0f) ? 1.0f : result.Y;
+            result.Z = (result.Z > 1.0f) ? 1.0f : result.Z;
+
+            result.X = (result.X < 0.0f) ? 0.0f : result.X;
+            result.Y = (result.Y < 0.0f) ? 0.0f : result.Y;
+            result.Z = (result.Z < 0.0f) ? 0.0f : result.Z;
+
+            return result;
         }
 
         public void changeDistance(float distance)

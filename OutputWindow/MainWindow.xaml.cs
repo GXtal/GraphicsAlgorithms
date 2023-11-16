@@ -31,7 +31,7 @@ public partial class MainWindow : Window
     Object3D mainModel = new Object3D();
     Camera mainCamera = new Camera();
     Target target = new Target();
-    LightSource lightSource = new LightSource(0, 200, 0);
+    LightSource lightSource = new LightSource();
 
     Pbgra32Bitmap bitmap;
     Vector4[] windowVertices;
@@ -77,15 +77,16 @@ public partial class MainWindow : Window
 
     public bool ZbufferCanBeDrawn(int i, Vector3 eye)
     {
-        var aDot = worldVertices[mainModel.Faces[i][0]];
-        var bDot = worldVertices[mainModel.Faces[i][1]];
-        var cDot = worldVertices[mainModel.Faces[i][2]];
+        var aDot = windowVertices[mainModel.Faces[i][0]];
+        var bDot = windowVertices[mainModel.Faces[i][1]];
+        var cDot = windowVertices[mainModel.Faces[i][2]];
 
         var CA = cDot - bDot;
         var BA = aDot - bDot;
-        var denominator = Vector3.Cross(CA, BA);
-        var eyeFromTarget = eye - target.GetPosition();
-        if (Vector3.Dot(denominator, eyeFromTarget) < 0)
+        //var denominator = Vector3.Cross(CA, BA);
+        var denominator = CA.X * BA.Y - CA.Y * BA.X;
+       // var eyeFromTarget = eye - target.GetPosition();
+        if (denominator > 0)
         {
             faceCanBeDrawn[i] = false;
         }
@@ -111,23 +112,19 @@ public partial class MainWindow : Window
 
 
         var CA = cDot - bDot;
-        var BA = aDot - bDot;
+        var BA = aDot - bDot;   
 
 
-        var normA = Vector3.Normalize(vn[mainModel.Faces[i][0]]);
-        var normB = Vector3.Normalize(vn[mainModel.Faces[i][1]]);
-        var normC = Vector3.Normalize(vn[mainModel.Faces[i][2]]);
+        var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
+        var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
+        var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
 
 
-
-        var totalCount = 0;
-        var RightCount = 0;
         var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
         for(var y = minY; y <= maxY; ++y)
         {
             for (var x = minX; x <= maxX; ++x)
             {
-                totalCount++;
                 if (x < 0 || x >= (int)ScreenWidth || y < 0 || y >= (int)ScreenHeight)
                 {
                     continue;
@@ -145,7 +142,6 @@ public partial class MainWindow : Window
                     continue;
                 }
 
-                RightCount++;
 
                 //Check z-buffer
                 var depth = aDot.Z * w + bDot.Z * u + cDot.Z * v;
@@ -153,14 +149,12 @@ public partial class MainWindow : Window
                 var nPoint = normA * w + normB * u + normC * v; 
                 if (depth < zbuffer[y][x])
                 {
-                    var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewPortInvert);
+                    var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
 
                     var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
                     lightVector = Vector3.Normalize(lightVector - new Vector3(fragPos.X, fragPos.Y, fragPos.Z));
-                    var lightA = Vector3.Dot(nPoint, lightVector);
-                    if (lightA < 0) lightA = 0;
-                    var light = lightA;
-                    bitmap.SetPixel(x, y, new Vector3(lightSource.Color[0] *  light, lightSource.Color[1] * light, lightSource.Color[2] * light));
+                    var lightIntVector = lightSource.GetResultColor(Vector3.Dot(nPoint, lightVector));
+                    bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
                     zbuffer[y][x] = depth;
                 }
                 
@@ -213,14 +207,21 @@ public partial class MainWindow : Window
     {
         switch (e.Key)
         {
+            case Key.U:
+                lightSource.AmbientIntensity += 0.05f;
+                if (lightSource.AmbientIntensity > 1f) lightSource.AmbientIntensity = 1.0f;
+                break;
             case Key.I:
-                mainModel.RotationX += 0.1f;
+                lightSource.AmbientIntensity -= 0.05f;
+                if (lightSource.AmbientIntensity < 0f) lightSource.AmbientIntensity = 0.0f;
                 break;
             case Key.O:
-                mainModel.RotationY += 0.1f;
+                lightSource.DiffuseIntensity += 0.05f;
+                if (lightSource.DiffuseIntensity > 1f) lightSource.DiffuseIntensity = 1.0f;
                 break;
             case Key.P:
-                mainModel.RotationZ += 0.1f;
+                lightSource.DiffuseIntensity -= 0.05f;
+                if (lightSource.DiffuseIntensity < 0f) lightSource.DiffuseIntensity = 0.0f;
                 break;
             case Key.N:
                 mainModel.ScaleX += 0.1f;
@@ -276,19 +277,19 @@ public partial class MainWindow : Window
             var CAWorld = cDotWorld - aDotWorld;
             var BAWorld = bDotWorld - aDotWorld;
 
-            var CBWorld = cDotWorld - bDotWorld;
-            var ABWorld = aDotWorld - bDotWorld;
+            //var CBWorld = cDotWorld - bDotWorld;
+            //var ABWorld = aDotWorld - bDotWorld;
 
-            var BCWorld = bDotWorld - cDotWorld;
-            var ACWorld = aDotWorld - cDotWorld;
+            //var BCWorld = bDotWorld - cDotWorld;
+            //var ACWorld = aDotWorld - cDotWorld;
 
             var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
-            var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
-            var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
+           // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
+           // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
 
             vn[mainModel.Faces[i][0]] += normA;
-            vn[mainModel.Faces[i][1]] += normB;
-            vn[mainModel.Faces[i][2]] += normC;
+            vn[mainModel.Faces[i][1]] += normA;
+            vn[mainModel.Faces[i][2]] += normA;
         }
 
         for (var i = 0; i < vn.Length; i++)
@@ -333,7 +334,7 @@ public partial class MainWindow : Window
 
     private void Window_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton == MouseButton.Middle)
+        if (e.ChangedButton == MouseButton.Right)
         {
             isLightChange = (isLightChange) ? false : true;
         }

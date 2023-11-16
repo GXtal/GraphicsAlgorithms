@@ -9,12 +9,12 @@ public class Object3D
 {
     public List<Vector3> Vertexes { get; } = new();
     public List<List<int>> Faces { get; } = new();
-    public List<List<int>> FacesColor { get; } = new();
+    public List<List<float>> FacesColor { get; } = new();
 
     private Random _randomizer = new Random();
     public float PositionX { get; set; }
     public float PositionY { get; set; }
-    public  float PositionZ { get; set; } = -3.0f;
+    public  float PositionZ { get; set; }
     public float RotationX { get; set; }
     public float RotationY { get; set; }
     public float RotationZ { get; set; }
@@ -95,11 +95,10 @@ public class Object3D
                 else if (args[0] == "f")
                 {
                     List<int> face = new List<int>();
-                    FacesColor.Add(new List<int>());
-                    for (var k = 0; k < 3; ++k)
-                    {
-                        FacesColor[colorIndex].Add(_randomizer.Next(0, 255));
-                    }
+                    FacesColor.Add(new List<float>());
+                    FacesColor[colorIndex].Add(0.1f);
+                    FacesColor[colorIndex].Add(1f);
+                    FacesColor[colorIndex].Add(0.0f);
 
                     for (int i = 1; i < args.Length; i++)
                     {
