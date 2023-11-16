@@ -152,8 +152,13 @@ public partial class MainWindow : Window
                     var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
 
                     var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
-                    lightVector = Vector3.Normalize(lightVector - new Vector3(fragPos.X, fragPos.Y, fragPos.Z));
-                    var lightIntVector = lightSource.GetResultColor(Vector3.Dot(nPoint, lightVector));
+                    var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
+                    lightVector = Vector3.Normalize(lightVector - FragPos3);
+                    var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
+                    var LN = Vector3.Dot(nPoint, lightVector);
+                    var defferedLightVector = lightVector - 2 * LN * nPoint;
+                    var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
+                    var lightIntVector = lightSource.GetResultColor(LN, RV);
                     bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
                     zbuffer[y][x] = depth;
                 }
@@ -222,6 +227,22 @@ public partial class MainWindow : Window
             case Key.P:
                 lightSource.DiffuseIntensity -= 0.05f;
                 if (lightSource.DiffuseIntensity < 0f) lightSource.DiffuseIntensity = 0.0f;
+                break;
+            case Key.H:
+                lightSource.SpecularAlpha += 1f;
+                //if (lightSource.SpecularAlpha > 0f) lightSource.DiffuseIntensity = 0.0f;
+                break;
+            case Key.J:
+                lightSource.SpecularAlpha -= 1f;
+                if (lightSource.SpecularAlpha < 1f) lightSource.SpecularAlpha = 1.0f;
+                break;
+            case Key.K:
+                lightSource.SpecularIntensity += 0.05f;
+                if (lightSource.SpecularIntensity > 1f) lightSource.SpecularIntensity = 1.0f;
+                break;
+            case Key.L:
+                lightSource.SpecularIntensity -= 0.05f;
+                if (lightSource.SpecularIntensity < 0f) lightSource.SpecularIntensity = 0.0f;
                 break;
             case Key.N:
                 mainModel.ScaleX += 0.1f;

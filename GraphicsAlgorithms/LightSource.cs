@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -15,16 +16,19 @@ namespace GraphicsAlgorithms
         float angleX = (float)(Math.PI / 2);
         public float[] DiffuseColor { get; set; } =  new float[] { 1.0f, 1.0f, 1.0f};
         public float[] AmbientColor { get; set; } = new float[] { 0.5f, 0.3f, 0.4f};
+        public float[] SpecularColor { get; set; } = new float[] { 1.0f, 1.0f, 1.0f };
         public float AmbientIntensity { get; set; } = 0.0f;
-        public float DiffuseIntensity { get; set; } = 1.0f;
+        public float DiffuseIntensity { get; set; } = 0.7f;
+        public float SpecularIntensity { get; set; } = 1.0f;
+        public float SpecularAlpha { get; set; } = 5f;
 
 
-        public Vector3 GetResultColor(float NL)
+        public Vector3 GetResultColor(float NL, float RV)
         {
             var result = new Vector3();
-            result.X = AmbientColor[0] * AmbientIntensity + DiffuseColor[0] * DiffuseIntensity * NL;
-            result.Y = AmbientColor[1] * AmbientIntensity + DiffuseColor[1] * DiffuseIntensity * NL;
-            result.Z = AmbientColor[2] * AmbientIntensity + DiffuseColor[2] * DiffuseIntensity * NL;
+            result.X = AmbientColor[0] * AmbientIntensity + DiffuseColor[0] * DiffuseIntensity * NL + SpecularColor[0] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
+            result.Y = AmbientColor[1] * AmbientIntensity + DiffuseColor[1] * DiffuseIntensity * NL + SpecularColor[1] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
+            result.Z = AmbientColor[2] * AmbientIntensity + DiffuseColor[2] * DiffuseIntensity * NL + SpecularColor[2] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
 
             result.X = (result.X > 1.0f) ? 1.0f : result.X;
             result.Y= (result.Y > 1.0f) ? 1.0f : result.Y;
