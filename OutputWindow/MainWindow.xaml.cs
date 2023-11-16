@@ -121,9 +121,18 @@ public partial class MainWindow : Window
         var BA = aDot - bDot;   
 
 
-        var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
-        var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
-        var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
+        //var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
+        //var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
+        //var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
+
+        var aDotWorld = worldVertices[mainModel.Faces[i][0]];
+        var bDotWorld = worldVertices[mainModel.Faces[i][1]];
+        var cDotWorld = worldVertices[mainModel.Faces[i][2]];
+
+        var CAWorld = cDotWorld - aDotWorld;
+        var BAWorld = bDotWorld - aDotWorld;
+
+        var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
 
 
         var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
@@ -152,21 +161,28 @@ public partial class MainWindow : Window
                 //Check z-buffer
                 var depth = aDot.Z * w + bDot.Z * u + cDot.Z * v;
                 P.Z = depth;
-                var nPoint = normA * w + normB * u + normC * v; 
+                //var nPoint = normA * w + normB * u + normC * v; 
                 if (depth < zbuffer[y][x])
                 {
-                    var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
+                    //var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
 
-                    var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
-                    var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
-                    lightVector = Vector3.Normalize(lightVector - FragPos3);
-                    var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
-                    var LN = Vector3.Dot(nPoint, lightVector);
-                    var defferedLightVector = lightVector - 2 * LN * nPoint;
-                    var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
-                    if (RV < 0 ) RV = 0.0f;
-                    var lightIntVector = lightSource.GetResultColor(LN, RV);
-                    bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
+                    //var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
+                    //var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
+                    //lightVector = Vector3.Normalize(lightVector - FragPos3);
+                    //var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
+                    //var LN = Vector3.Dot(nPoint, lightVector);
+                    //var defferedLightVector = lightVector - 2 * LN * nPoint;
+                    //var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
+                    //if (RV < 0 ) RV = 0.0f;
+                    //var lightIntVector = lightSource.GetResultColor(LN, RV);
+                    //bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
+                    //zbuffer[y][x] = depth;
+
+                    var lightVector = lightSource.getLightPosition(target.GetPosition());
+                    lightVector = Vector3.Normalize(-lightVector);
+                    var light = Vector3.Dot(norm, lightVector);
+                    if (light < 0) light = 0;
+                    bitmap.SetPixel(x, y, new Vector3(light, light, light));
                     zbuffer[y][x] = depth;
                 }
                 
