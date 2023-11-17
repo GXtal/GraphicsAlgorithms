@@ -7,11 +7,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" MouseDown="Window_MouseDown" MouseUp="Window_MouseUp" MouseMove="Window_MouseMove" MouseWheel="Window_MouseWheel">
     <Grid x:Name="MainGrid">
-        
+
         <Image x:Name="MainImage">
-            
+
         </Image>
-        <TextBlock Name="fpsTextBlock" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"/>
-        
+
     </Grid>
 </Window>

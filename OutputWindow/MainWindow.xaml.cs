@@ -29,6 +29,9 @@ public partial class MainWindow : Window
     float ScreenWidth { get; set; }
     float ScreenHeight { get; set; }
 
+    int ScreenIntWidth { get; set; }
+    int ScreenIntHeight { get; set; }
+
     Object3D mainModel = new Object3D();
     Camera mainCamera = new Camera();
     Target target = new Target();
@@ -120,27 +123,28 @@ public partial class MainWindow : Window
         var CA = cDot - bDot;
         var BA = aDot - bDot;   
 
+        //for lab3
+        var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
+        var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
+        var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
 
-        //var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
-        //var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
-        //var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
+        //for lab2
+        //var aDotWorld = worldVertices[mainModel.Faces[i][0]];
+        //var bDotWorld = worldVertices[mainModel.Faces[i][1]];
+        //var cDotWorld = worldVertices[mainModel.Faces[i][2]];
 
-        var aDotWorld = worldVertices[mainModel.Faces[i][0]];
-        var bDotWorld = worldVertices[mainModel.Faces[i][1]];
-        var cDotWorld = worldVertices[mainModel.Faces[i][2]];
+        //var CAWorld = cDotWorld - aDotWorld;
+        //var BAWorld = bDotWorld - aDotWorld;
 
-        var CAWorld = cDotWorld - aDotWorld;
-        var BAWorld = bDotWorld - aDotWorld;
-
-        var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
+        //var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
 
 
-        var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
+        var denominator = (CA.X * BA.Y - CA.Y * BA.X);
         for(var y = minY; y <= maxY; ++y)
         {
             for (var x = minX; x <= maxX; ++x)
             {
-                if (x < 0 || x >= (int)ScreenWidth || y < 0 || y >= (int)ScreenHeight)
+                if (x < 0 || x >= ScreenIntWidth || y < 0 || y >= ScreenIntHeight)
                 {
                     continue;
                 }
@@ -149,8 +153,8 @@ public partial class MainWindow : Window
                 var BP = bDot - P;
                 var CP = cDot - P;
 
-                var v = (BP.X * AP.Y - BP.Y * AP.X) / denominator;
-                var u = (AP.X * CP.Y - AP.Y * CP.X) / denominator;
+                var v = (AP.X * BP.Y - AP.Y * BP.X) / denominator;
+                var u = (CP.X * AP.Y - CP.Y * AP.X) / denominator;
                 var w = 1 - u - v;
                 if (v < 0 || u < 0 || w < 0)
                 {
@@ -161,41 +165,42 @@ public partial class MainWindow : Window
                 //Check z-buffer
                 var depth = aDot.Z * w + bDot.Z * u + cDot.Z * v;
                 P.Z = depth;
-                //var nPoint = normA * w + normB * u + normC * v; 
+                //for lab3
                 if (depth < zbuffer[y][x])
                 {
-                    //var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
-
-                    //var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
-                    //var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
-                    //lightVector = Vector3.Normalize(lightVector - FragPos3);
-                    //var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
-                    //var LN = Vector3.Dot(nPoint, lightVector);
-                    //var defferedLightVector = lightVector - 2 * LN * nPoint;
-                    //var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
-                    //if (RV < 0 ) RV = 0.0f;
-                    //var lightIntVector = lightSource.GetResultColor(LN, RV);
-                    //bitmap.SetPixel(x, y, new Vector3(mainModel.FacesColor[i][0] * lightIntVector.X, mainModel.FacesColor[i][1] * lightIntVector.Y, mainModel.FacesColor[i][2] * lightIntVector.Z));
-                    //zbuffer[y][x] = depth;
-
-                    var lightVector = lightSource.getLightPosition(target.GetPosition());
-                    lightVector = Vector3.Normalize(-lightVector);
-                    var light = Vector3.Dot(norm, lightVector);
-                    if (light < 0) light = 0;
-                    bitmap.SetPixel(x, y, new Vector3(light, light, light));
+                    //for lab3
+                    var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
+                    var nPoint = normA * w + normB * u + normC * v;
+                    var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
+                    var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
+                    lightVector = Vector3.Normalize(lightVector - FragPos3);
+                    var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
+                    var LN = Vector3.Dot(nPoint, lightVector);
+                    var defferedLightVector = lightVector - 2 * LN * nPoint;
+                    var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
+                    if (RV < 0 ) RV = 0.0f;
+                    if (LN < 0) LN = 0.0f;
+                    var lightIntVector = lightSource.GetResultColor(LN, RV, mainModel.FacesColor[i]);
+                    bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
                     zbuffer[y][x] = depth;
+
+                    //for lab2
+                    //var lightVector = lightSource.getLightPosition(new Vector3(0, 0, 0));
+                    //lightVector = Vector3.Normalize(-lightVector);
+                    //var light = Vector3.Dot(norm, lightVector);
+                    //if (light < 0) light = 0;
+                    //bitmap.SetPixel(x, y, new Vector3(light, light, light));
+                    //zbuffer[y][x] = depth;
                 }
                 
             } 
         }
-
-        Console.WriteLine(0);
     }
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
 
-        stopWatch.Restart();
+       // stopWatch.Restart();
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
             for (var j = 0; j < bitmap.PixelWidth; ++j)
@@ -207,7 +212,7 @@ public partial class MainWindow : Window
         bitmap.Source.Lock();
         for (var i = 0; i < zbuffer.Length; i++)
         {
-            for (var j = 0; j < (int)ScreenWidth; ++j)
+            for (var j = 0; j < ScreenIntWidth; ++j)
             {
                 zbuffer[i][j] = float.MaxValue;
             }
@@ -220,30 +225,12 @@ public partial class MainWindow : Window
             }
         }
 
-        stopWatch.Stop();
+        Console.WriteLine();
+
+       // stopWatch.Stop();
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
-    }
-
-    private void FpsTimer_Tick(object sender, EventArgs e)
-    {
-        // Update the text block with FPS value
-        fpsTextBlock.Text = $"Render Time: {fps}";
-
-        // Reset frame count
-        frameCount = 0;
-    }
-
-    private void CompositionTarget_Rendering(object sender, EventArgs e)
-    {
-        // Update frame count
-        frameCount++;
-
-        // Calculate FPS
-        double elapsedMilliSeconds = stopWatch.Elapsed.TotalMilliseconds;
-        fps = (int)(elapsedMilliSeconds);
-        // Reset stopwatch
     }
 
     public MainWindow()
@@ -323,10 +310,12 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
-        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
+        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
+        ScreenIntHeight = (int)MainGrid.ActualHeight;
+        ScreenIntWidth = (int)MainGrid.ActualWidth;
         bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
         MainImage.Source = bitmap.Source;
         MainImage.Source = bitmap.Source;
@@ -376,13 +365,13 @@ public partial class MainWindow : Window
         }
         
        
-        CompositionTarget.Rendering += CompositionTarget_Rendering;
+        //CompositionTarget.Rendering += CompositionTarget_Rendering;
 
         // Set up the FPS timer (for updating the text block)
-        DispatcherTimer fpsTimer = new DispatcherTimer();
-        fpsTimer.Tick += FpsTimer_Tick;
-        fpsTimer.Interval = TimeSpan.FromSeconds(1);
-        fpsTimer.Start();
+        //DispatcherTimer fpsTimer = new DispatcherTimer();
+        //fpsTimer.Tick += FpsTimer_Tick;
+        //fpsTimer.Interval = TimeSpan.FromSeconds(1);
+        //fpsTimer.Start();
 
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
@@ -392,6 +381,8 @@ public partial class MainWindow : Window
     {
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
+        ScreenIntHeight = (int)MainGrid.ActualHeight;
+        ScreenIntWidth = (int)MainGrid.ActualWidth;
         bitmap = new Pbgra32Bitmap((int)ScreenWidth, (int)ScreenHeight);
         MainImage.Source = bitmap.Source;
         target.PositionX = mainModel.PositionX;

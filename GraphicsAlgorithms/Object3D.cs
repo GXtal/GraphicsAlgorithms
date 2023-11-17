@@ -110,5 +110,6 @@ public class Object3D
                 }
             }
         }
+        Console.Write(0);
     }
 }

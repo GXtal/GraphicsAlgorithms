@@ -23,12 +23,12 @@ namespace GraphicsAlgorithms
         public float SpecularAlpha { get; set; } = 5f;
 
 
-        public Vector3 GetResultColor(float NL, float RV)
+        public Vector3 GetResultColor(float NL, float RV, List<float> colorModel)
         {
             var result = new Vector3();
-            result.X = AmbientColor[0] * AmbientIntensity + DiffuseColor[0] * DiffuseIntensity * NL + SpecularColor[0] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
-            result.Y = AmbientColor[1] * AmbientIntensity + DiffuseColor[1] * DiffuseIntensity * NL + SpecularColor[1] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
-            result.Z = AmbientColor[2] * AmbientIntensity + DiffuseColor[2] * DiffuseIntensity * NL + SpecularColor[2] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
+            result.X = AmbientColor[0] * AmbientIntensity * colorModel[0] + DiffuseColor[0] * DiffuseIntensity * NL * colorModel[0] + SpecularColor[0] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
+            result.Y = AmbientColor[1] * AmbientIntensity * colorModel[1] + DiffuseColor[1] * DiffuseIntensity * NL * colorModel[1] + SpecularColor[1]  * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
+            result.Z = AmbientColor[2] * AmbientIntensity * colorModel[2] + DiffuseColor[2] * DiffuseIntensity * NL * colorModel[2] + SpecularColor[2] * SpecularIntensity * (float)Math.Pow(RV, SpecularAlpha);
 
             result.X = (result.X > 1.0f) ? 1.0f : result.X;
             result.Y= (result.Y > 1.0f) ? 1.0f : result.Y;
