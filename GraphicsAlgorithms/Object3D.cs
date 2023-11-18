@@ -1,17 +1,25 @@
 ﻿using System.Numerics;
-using System.Collections.Concurrent;
 using static System.Globalization.CultureInfo;
-using System.Reflection;
+using System.Drawing;
+using System.Drawing.Imaging;
+using Pfim;
+using System.Runtime.InteropServices;
 
 namespace GraphicsAlgorithms;
 
 public class Object3D
 {
-    public List<Vector3> Vertexes { get; } = new();
-    public List<List<int>> Faces { get; } = new();
-    public List<List<float>> FacesColor { get; } = new();
+    private string pathToFile = @"C:\Users\admin\Desktop\ObjDrawer\ObjDrawer\data\HardshellTransformer";
 
-    private Random _randomizer = new Random();
+    private string _lastMaterialName = "";
+    public string MaterialsPath { get; private set; }
+    public Dictionary<String, Material> materials { get; private set; } = new();
+    public List<Vector3> Vertexes { get; } = new();
+    public List<Vector3> TextVertexes { get; } = new();
+    public List<Vector3> ColorVertexes { get; set; } = new();
+    public List<Vector3> Normals { get; set; } = new();
+
+
     public float PositionX { get; set; }
     public float PositionY { get; set; }
     public  float PositionZ { get; set; }
@@ -73,10 +81,178 @@ public class Object3D
                                    Matrix4x4.CreateRotationZ(RotationZ);
 
         Matrix4x4 worldMatrix = translationMatrix * scaleMatrix * rotationMatrix;
-
         return worldMatrix;
     }
 
+    private void FilterColors(string curName)
+    {
+        foreach (var face in materials[curName].TextFaces)
+        {
+            for (var i = 0; i < face.Count; ++i)
+            {
+                var index = face[i];
+                var vertex = ColorVertexes[index];
+                vertex.X = (vertex.X > 1.0f) ? 1.0f : vertex.X;
+                vertex.Y = (vertex.Y > 1.0f) ? 1.0f : vertex.Y;
+                vertex.Z = (vertex.Z > 1.0f) ? 1.0f : vertex.Z;
+
+                vertex.X = (vertex.X < 0.0f) ? 0.0f : vertex.X;
+                vertex.Y = (vertex.Y < 0.0f) ? 0.0f : vertex.Y;
+                vertex.Z = (vertex.Z < 0.0f) ? 0.0f : vertex.Z;
+                ColorVertexes[index] = vertex;
+                
+            }
+        }
+    }
+
+    private Bitmap GetBitmapFromFile(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).Trim();
+
+
+        if (ext == ".tga")
+        {
+            using (var image = Pfimage.FromFile(path))
+            {
+                var format = PixelFormat.Format32bppArgb;
+                var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
+                var bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
+                return bitmap;
+            }
+        }
+        else
+        {
+            return Bitmap.FromFile(path) as Bitmap;
+        }
+    }
+
+    private void LoadPolygonData()
+    {
+        var curName = "";
+        foreach (var line in File.ReadLines(pathToFile + "\\" +MaterialsPath))
+        {
+            string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (args.Length > 0)
+            {
+                if (args[0][0] == '\t')
+                {
+                    args[0] = args[0].Remove(0, 1);
+                }
+                switch (args[0])
+                {
+
+                    case "newmtl":
+                        if (!String.IsNullOrEmpty(curName))
+                            FilterColors(curName);
+                        curName = args[1];
+                        break;
+                    case "Ka":
+                        float x = float.Parse(args[1], InvariantCulture);
+                        float y = float.Parse(args[2], InvariantCulture);
+                        float z = float.Parse(args[3], InvariantCulture);
+                        materials[curName].Ka = new float[] { x, y, z }; 
+                        break;
+                    case "Kd":
+                        x = float.Parse(args[1], InvariantCulture);
+                        y = float.Parse(args[2], InvariantCulture);
+                        z = float.Parse(args[3], InvariantCulture);
+                        materials[curName].Kd = new float[] { x, y, z };
+                        break;
+                    case "Ks":
+                        x = float.Parse(args[1], InvariantCulture);
+                        y = float.Parse(args[2], InvariantCulture);
+                        z = float.Parse(args[3], InvariantCulture);
+                        materials[curName].Ks = new float[] { x, y, z };
+                        break;
+                    case "Ns":
+                        materials[curName].Alpha = float.Parse(args[1], InvariantCulture);
+                        break;
+                    case "map_Ka":
+                        var fileName = pathToFile + "\\" + args[1] ;
+                        var tgaImage = GetBitmapFromFile(fileName);
+                        foreach (var face in materials[curName].TextFaces)
+                        {
+                            var Ia = 0.0f;
+                            for (var i = 0; i < face.Count; ++i)
+                            {
+                                var index = face[i];
+                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
+                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
+                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
+                                ColorVertexes[index] += new Vector3(
+                                    materials[curName].Ka[0] * (color.R / 255.0f),
+                                    materials[curName].Ka[1] * (color.G / 255.0f),
+                                    materials[curName].Ka[2] * (color.B / 255.0f)
+                                    );
+                            }
+                        }
+                        break;
+                    case "map_Kd":
+                        fileName = pathToFile + "\\" + args[1];
+                        tgaImage = GetBitmapFromFile(fileName);
+                        foreach (var face in materials[curName].TextFaces)
+                        {
+                            var Id = 0.0f;
+                            for (var i = 0; i < face.Count; ++i)
+                            {
+                                var index = face[i];
+                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
+                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
+                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
+                                ColorVertexes[index] += new Vector3(
+                                    materials[curName].Kd[0] * (color.R / 255.0f),
+                                    materials[curName].Kd[1] * (color.G / 255.0f),
+                                    materials[curName].Kd[2] * (color.B / 255.0f)
+                                    );
+                            }
+                        }
+                        break;
+                    case "map_Ks":
+                        fileName = pathToFile + "\\" + args[1];
+                        tgaImage = GetBitmapFromFile(fileName);
+                        foreach (var face in materials[curName].TextFaces)
+                        {
+                            var Ia = 0.0f;
+                            for (var i = 0; i < face.Count; ++i)
+                            {
+                                var index = face[i];
+                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
+                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
+                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
+                                ColorVertexes[index] += new Vector3(
+                                    materials[curName].Ks[0] * (color.R / 255.0f),
+                                    materials[curName].Ks[1] * (color.G / 255.0f),
+                                    materials[curName].Ks[2] * (color.B / 255.0f)
+                                    );
+                            }
+                        }
+                        break;
+                    case "map_bump":
+                        fileName = pathToFile + "\\" + args[1];
+                        tgaImage = GetBitmapFromFile(fileName);
+                        foreach (var face in materials[curName].TextFaces)
+                        {
+                            var Ia = 0.0f;
+                            for (var i = 0; i < face.Count; ++i)
+                            {
+                                var index = face[i];
+                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
+                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
+                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
+                                Normals[index] = new Vector3(
+                                    (color.R / 255.0f) / 2.0f - 1.0f,
+                                    (color.G / 255.0f) / 2.0f - 1.0f,
+                                    (color.B / 255.0f) / 2.0f - 1.0f
+                                    );
+                            }
+                        }
+                        break;
+                }
+            }
+
+        }
+        FilterColors(curName);
+    }
     public void LoadModel(string fileName)
     {
         var colorIndex = 0;
@@ -85,31 +261,53 @@ public class Object3D
             string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (args.Length > 0)
             {
-                if (args[0] == "v")
+                switch (args[0])
                 {
-                    float x = float.Parse(args[1], InvariantCulture);
-                    float y = float.Parse(args[2], InvariantCulture);
-                    float z = float.Parse(args[3], InvariantCulture);
-                    Vertexes.Add(new(x, y, z));
-                }
-                else if (args[0] == "f")
-                {
-                    List<int> face = new List<int>();
-                    FacesColor.Add(new List<float>());
-                    FacesColor[colorIndex].Add(0.1f);
-                    FacesColor[colorIndex].Add(1f);
-                    FacesColor[colorIndex].Add(0.0f);
+                    case "mtllib":
+                        MaterialsPath = args[1];
+                        break;
+                    case "v":
+                        float x = float.Parse(args[1], InvariantCulture);
+                        float y = float.Parse(args[2], InvariantCulture);
+                        float z = float.Parse(args[3], InvariantCulture);
+                        Vertexes.Add(new(x, y, z));
+                        Normals.Add(new());
+                        break;
+                    case "vt":
+                        x = float.Parse(args[1], InvariantCulture);
+                        y = float.Parse(args[2], InvariantCulture);
+                        z = float.Parse(args[3], InvariantCulture);
+                        TextVertexes.Add(new(x, y, z));
+                        ColorVertexes.Add(new(0, 0, 0));
+                        break;
+                    case "usemtl":
+                        _lastMaterialName = args[1];
+                        if (!materials.ContainsKey(_lastMaterialName))
+                            materials.Add(_lastMaterialName, new Material());
+                        break;
+                    case "f":
+                        List<int> face = new List<int>();
+                        List<int> textFace = new List<int>();
+                        //FacesColor.Add(new List<float>());
+                        //FacesColor[colorIndex].Add(0.1f);
+                        //FacesColor[colorIndex].Add(1f);
+                        //FacesColor[colorIndex].Add(0.0f);
 
-                    for (int i = 1; i < args.Length; i++)
-                    {
-                        string[] indexes = args[i].Split('/');
-                        face.Add(int.Parse(indexes[0]) - 1);
-                    }
-                    Faces.Add(face);
-                    colorIndex++;
+                        for (int i = 1; i < args.Length; i++)
+                        {
+                            string[] indexes = args[i].Split('/');
+                            face.Add(int.Parse(indexes[0]) - 1);
+                            textFace.Add(int.Parse(indexes[1]) - 1);
+                        }
+                        materials[_lastMaterialName].Faces.Add(face);
+                        materials[_lastMaterialName].TextFaces.Add(face);
+                        colorIndex++;
+                        break;
                 }
+
             }
         }
+        LoadPolygonData();
         Console.Write(0);
     }
 }

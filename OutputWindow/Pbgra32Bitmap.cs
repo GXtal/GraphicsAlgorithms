@@ -22,6 +22,7 @@ namespace Rasterization
 
         public Pbgra32Bitmap(BitmapSource source)
         {
+            
             Source = new(source.Format != Pbgra32 ? new FormatConvertedBitmap(source, Pbgra32, null, 0) : source);
             InitializeProperties();
         }

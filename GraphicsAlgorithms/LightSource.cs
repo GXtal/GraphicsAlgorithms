@@ -14,9 +14,9 @@ namespace GraphicsAlgorithms
         float distanceToTarget = 10.0f;
         float angleY = 0;
         float angleX = (float)(Math.PI / 2);
-        public float[] DiffuseColor { get; set; } =  new float[] { 1.0f, 1.0f, 1.0f};
-        public float[] AmbientColor { get; set; } = new float[] { 0.5f, 0.3f, 0.4f};
-        public float[] SpecularColor { get; set; } = new float[] { 1.0f, 1.0f, 1.0f };
+        public float[] DiffuseColor { get; set; } =  new float[] { 0.588000f, 0.588000f, 0.588000f };
+        public float[] AmbientColor { get; set; } = new float[] { 0.588000f, 0.588000f, 0.588000f };
+        public float[] SpecularColor { get; set; } = new float[] { 0.1f, 0.1f, 0.1f };
         public float AmbientIntensity { get; set; } = 0.0f;
         public float DiffuseIntensity { get; set; } = 0.7f;
         public float SpecularIntensity { get; set; } = 1.0f;
