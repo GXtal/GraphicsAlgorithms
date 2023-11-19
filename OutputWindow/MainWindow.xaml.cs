@@ -84,35 +84,54 @@ public partial class MainWindow : Window
         }
     }
 
-    public bool ZbufferCanBeDrawn(int i, Vector3 eye)
+    public bool ZbufferCanBeDrawn(List<int> polygon)
     {
-        var aDot = windowVertices[mainModel.Faces[i][0]];
-        var bDot = windowVertices[mainModel.Faces[i][1]];
-        var cDot = windowVertices[mainModel.Faces[i][2]];
+        var aDot = windowVertices[polygon[0]];
+        var bDot = windowVertices[polygon[1]];
+        var cDot = windowVertices[polygon[2]];
 
-        var CA = cDot - bDot;
-        var BA = aDot - bDot;
+        //was fixed
+        var CA = cDot - aDot;
+        var BA = bDot - aDot;
         //var denominator = Vector3.Cross(CA, BA);
         var denominator = CA.X * BA.Y - CA.Y * BA.X;
        // var eyeFromTarget = eye - target.GetPosition();
-        if (denominator > 0)
+        if (denominator < 0)
         {
-            faceCanBeDrawn[i] = false;
-        }
-        else
-        {
-            faceCanBeDrawn[i] = true;
+            return false;
         }
 
-        return faceCanBeDrawn[i];
+        return true;
+    }
+    
+    //x and y viewport coordinates
+    private List<Vector3> GetModelColor(List<int> polygon, string materialString, float x, float y)
+    {
+        var Ia = new Vector3();
+        var Is = new Vector3();
+        var Id = new Vector3();
+
+        var material = mainModel.materials[materialString];
+
+        if (material.TextureParts.MapKa != null)
+            Ia = material.TextureParts.GetKaFragment(y,x);
+        if (material.TextureParts.MapKs != null)
+            Is = material.TextureParts.GetKsFragment(y, x);
+        if (material.TextureParts.MapKd != null)
+            Id = material.TextureParts.GetKdFragment(y, x);
+
+        return new List<Vector3>() { Ia, Id, Is };
     }
 
-
-    public void RasterizationFace(int i)
+    public void RasterizationFace(List<int> polygon, List<int> textPolygon, string materialString)
     {
-        var aDot = windowVertices[mainModel.Faces[i][0]];
-        var bDot = windowVertices[mainModel.Faces[i][1]];
-        var cDot = windowVertices[mainModel.Faces[i][2]];
+        var aTextDot = mainModel.TextVertexes[textPolygon[0]];
+        var bTextDot = mainModel.TextVertexes[textPolygon[1]];
+        var cTextDot = mainModel.TextVertexes[textPolygon[2]];
+
+        var aDot = windowVertices[polygon[0]];
+        var bDot = windowVertices[polygon[1]];
+        var cDot = windowVertices[polygon[2]];
 
         var minX = (int)Math.Min(Math.Min(aDot.X, bDot.X), cDot.X);
         var maxX = (int)Math.Max(Math.Max(aDot.X, bDot.X), cDot.X);
@@ -120,13 +139,13 @@ public partial class MainWindow : Window
         var maxY = (int)Math.Max(Math.Max(aDot.Y, bDot.Y), cDot.Y);
 
 
-        var CA = cDot - bDot;
-        var BA = aDot - bDot;   
+        var CA = cDot - aDot;
+        var BA = bDot - aDot;   
 
         //for lab3
-        var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
-        var normB = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][1]], modelMatrix));
-        var normC = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][2]], modelMatrix));
+        var normA = Vector3.Normalize(Vector3.Transform(vn[polygon[0]], modelMatrix));
+        var normB = Vector3.Normalize(Vector3.Transform(vn[polygon[1]], modelMatrix));
+        var normC = Vector3.Normalize(Vector3.Transform(vn[polygon[2]], modelMatrix));
 
         //for lab2
         //var aDotWorld = worldVertices[mainModel.Faces[i][0]];
@@ -138,8 +157,8 @@ public partial class MainWindow : Window
 
         //var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
 
-
-        var denominator = (CA.X * BA.Y - CA.Y * BA.X);
+        //Coodinates weren't fixed. Only after polygons were fixed
+        var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
         for(var y = minY; y <= maxY; ++y)
         {
             for (var x = minX; x <= maxX; ++x)
@@ -153,8 +172,8 @@ public partial class MainWindow : Window
                 var BP = bDot - P;
                 var CP = cDot - P;
 
-                var v = (AP.X * BP.Y - AP.Y * BP.X) / denominator;
-                var u = (CP.X * AP.Y - CP.Y * AP.X) / denominator;
+                var v = (BP.X * AP.Y - BP.Y * AP.X) / denominator;
+                var u = (AP.X * CP.Y - AP.Y * CP.X) / denominator;
                 var w = 1 - u - v;
                 if (v < 0 || u < 0 || w < 0)
                 {
@@ -169,8 +188,14 @@ public partial class MainWindow : Window
                 if (depth < zbuffer[y][x])
                 {
                     //for lab3
+                    var textVector = aTextDot * w + (bTextDot * u) + cTextDot * v;
                     var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
                     var nPoint = normA * w + normB * u + normC * v;
+                    if (mainModel.materials[materialString].TextureParts.MapNormals != null)
+                    {
+                        nPoint = mainModel.materials[materialString].TextureParts.GetNormalFragment(textVector.Y, textVector.X);
+                        // do something
+                    }
                     var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
                     var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
                     lightVector = Vector3.Normalize(lightVector - FragPos3);
@@ -180,7 +205,11 @@ public partial class MainWindow : Window
                     var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
                     if (RV < 0 ) RV = 0.0f;
                     if (LN < 0) LN = 0.0f;
-                    var lightIntVector = lightSource.GetResultColor(LN, RV, mainModel.FacesColor[i]);
+                    
+                    
+                    var partsColors = GetModelColor(polygon, materialString, textVector.X, textVector.Y);
+
+                    var lightIntVector = lightSource.GetResultColor(LN, RV, partsColors, mainModel.materials[materialString].Alpha, mainModel.materials[materialString]);
                     bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
                     zbuffer[y][x] = depth;
 
@@ -217,17 +246,24 @@ public partial class MainWindow : Window
                 zbuffer[i][j] = float.MaxValue;
             }
         }
-        for (var i = 0; i < mainModel.Faces.Count; ++i)
+
+        foreach (var materialString in mainModel.materials.Keys)
         {
-            if (ZbufferCanBeDrawn(i, eye))
+            var polygons = mainModel.materials[materialString].Faces;
+            var textPolygons = mainModel.materials[materialString].TextFaces;
+
+            for (var i = 0; i < polygons.Count; ++i)
             {
-                RasterizationFace(i);
+                if (ZbufferCanBeDrawn(polygons[i]))
+                {
+                    RasterizationFace(polygons[i], textPolygons[i], materialString);
+                }
             }
         }
 
         Console.WriteLine();
 
-       // stopWatch.Stop();
+
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
@@ -246,30 +282,30 @@ public partial class MainWindow : Window
     {
         switch (e.Key)
         {
-            case Key.U:
-                lightSource.AmbientIntensity += 0.05f;
-                if (lightSource.AmbientIntensity > 1f) lightSource.AmbientIntensity = 1.0f;
-                break;
-            case Key.I:
-                lightSource.AmbientIntensity -= 0.05f;
-                if (lightSource.AmbientIntensity < 0f) lightSource.AmbientIntensity = 0.0f;
-                break;
-            case Key.O:
-                lightSource.DiffuseIntensity += 0.05f;
-                if (lightSource.DiffuseIntensity > 1f) lightSource.DiffuseIntensity = 1.0f;
-                break;
-            case Key.P:
-                lightSource.DiffuseIntensity -= 0.05f;
-                if (lightSource.DiffuseIntensity < 0f) lightSource.DiffuseIntensity = 0.0f;
-                break;
-            case Key.H:
-                lightSource.SpecularAlpha += 1f;
-                //if (lightSource.SpecularAlpha > 0f) lightSource.DiffuseIntensity = 0.0f;
-                break;
-            case Key.J:
-                lightSource.SpecularAlpha -= 1f;
-                if (lightSource.SpecularAlpha < 1f) lightSource.SpecularAlpha = 1.0f;
-                break;
+            //case Key.U:
+            //    lightSource.AmbientIntensity += 0.05f;
+            //    if (lightSource.AmbientIntensity > 1f) lightSource.AmbientIntensity = 1.0f;
+            //    break;
+            //case Key.I:
+            //    lightSource.AmbientIntensity -= 0.05f;
+            //    if (lightSource.AmbientIntensity < 0f) lightSource.AmbientIntensity = 0.0f;
+            //    break;
+            //case Key.O:
+            //    lightSource.DiffuseIntensity += 0.05f;
+            //    if (lightSource.DiffuseIntensity > 1f) lightSource.DiffuseIntensity = 1.0f;
+            //    break;
+            //case Key.P:
+            //    lightSource.DiffuseIntensity -= 0.05f;
+            //    if (lightSource.DiffuseIntensity < 0f) lightSource.DiffuseIntensity = 0.0f;
+            //    break;
+            //case Key.H:
+            //    lightSource.SpecularAlpha += 1f;
+            //    //if (lightSource.SpecularAlpha > 0f) lightSource.DiffuseIntensity = 0.0f;
+            //    break;
+            //case Key.J:
+            //    lightSource.SpecularAlpha -= 1f;
+            //    if (lightSource.SpecularAlpha < 1f) lightSource.SpecularAlpha = 1.0f;
+            //    break;
             case Key.K:
                 lightSource.SpecularIntensity += 0.05f;
                 if (lightSource.SpecularIntensity > 1f) lightSource.SpecularIntensity = 1.0f;
@@ -322,31 +358,34 @@ public partial class MainWindow : Window
         target.PositionX = mainModel.PositionX;
         target.PositionY = mainModel.PositionY;
         target.PositionZ = mainModel.PositionZ;
-        faceCanBeDrawn = new bool[mainModel.Faces.Count];
 
         vn = new Vector3[mainModel.Vertexes.Count];
-        for (var i = 0; i < mainModel.Faces.Count; ++i)
+        foreach(var materialString in mainModel.materials.Keys)
         {
-            var aDotWorld = mainModel.Vertexes[mainModel.Faces[i][0]];
-            var bDotWorld = mainModel.Vertexes[mainModel.Faces[i][1]];
-            var cDotWorld = mainModel.Vertexes[mainModel.Faces[i][2]];
+            var polygons = mainModel.materials[materialString].Faces;
+            foreach(var polygon in polygons)
+            {
+                var aDotWorld = mainModel.Vertexes[polygon[0]];
+                var bDotWorld = mainModel.Vertexes[polygon[1]];
+                var cDotWorld = mainModel.Vertexes[polygon[2]];
 
-            var CAWorld = cDotWorld - aDotWorld;
-            var BAWorld = bDotWorld - aDotWorld;
+                var CAWorld = cDotWorld - aDotWorld;
+                var BAWorld = bDotWorld - aDotWorld;
 
-            //var CBWorld = cDotWorld - bDotWorld;
-            //var ABWorld = aDotWorld - bDotWorld;
+                //var CBWorld = cDotWorld - bDotWorld;
+                //var ABWorld = aDotWorld - bDotWorld;
 
-            //var BCWorld = bDotWorld - cDotWorld;
-            //var ACWorld = aDotWorld - cDotWorld;
+                //var BCWorld = bDotWorld - cDotWorld;
+                //var ACWorld = aDotWorld - cDotWorld;
 
-            var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
-           // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
-           // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
+                var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
+                // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
+                // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
 
-            vn[mainModel.Faces[i][0]] += normA;
-            vn[mainModel.Faces[i][1]] += normA;
-            vn[mainModel.Faces[i][2]] += normA;
+                vn[polygon[0]] += normA;
+                vn[polygon[1]] += normA;
+                vn[polygon[2]] += normA;
+            }
         }
 
         for (var i = 0; i < vn.Length; i++)
@@ -363,15 +402,6 @@ public partial class MainWindow : Window
                 zbuffer[i][j] = float.MaxValue;
             }   
         }
-        
-       
-        //CompositionTarget.Rendering += CompositionTarget_Rendering;
-
-        // Set up the FPS timer (for updating the text block)
-        //DispatcherTimer fpsTimer = new DispatcherTimer();
-        //fpsTimer.Tick += FpsTimer_Tick;
-        //fpsTimer.Interval = TimeSpan.FromSeconds(1);
-        //fpsTimer.Start();
 
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);

@@ -1,4 +1,10 @@
+using Pfim;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static System.Windows.Media.PixelFormats;
 

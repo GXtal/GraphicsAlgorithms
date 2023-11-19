@@ -26,9 +26,9 @@ namespace GraphicsAlgorithms
         public Vector3 GetResultColor(float NL, float RV, List<Vector3> colorParts, float alpha, Material material)
         {
             var result = new Vector3();
-            result.X = colorParts[0].X * material.Ka[0] + colorParts[1].X * material.Kd[0] * NL + colorParts[2].X * material.Ks[0] * (float)Math.Pow(RV, alpha);
-            result.Y = colorParts[1].Y * material.Ka[1] + colorParts[1].Y * material.Kd[1] * NL + colorParts[2].Y * material.Ks[1] * (float)Math.Pow(RV, alpha);
-            result.Z = colorParts[2].Y * material.Ka[2] + colorParts[1].Z * material.Kd[2] * NL + colorParts[2].Z * material.Ks[2] * (float)Math.Pow(RV, alpha);
+            result.X = colorParts[0].X * material.Ka[0] + colorParts[1].X * material.Kd[0] * NL+ colorParts[2].X * material.Ks[0] * (float)Math.Pow(RV, alpha);
+            result.Y = colorParts[0].Y * material.Ka[1] + colorParts[1].Y * material.Kd[1] * NL+ colorParts[2].Y * material.Ks[1] * (float)Math.Pow(RV, alpha);
+            result.Z = colorParts[0].Z * material.Ka[2] + colorParts[1].Z * material.Kd[2] * NL+ colorParts[2].Z * material.Ks[2] * (float)Math.Pow(RV, alpha);
 
             result.X = (result.X > 1.0f) ? 1.0f : result.X;
             result.Y= (result.Y > 1.0f) ? 1.0f : result.Y;

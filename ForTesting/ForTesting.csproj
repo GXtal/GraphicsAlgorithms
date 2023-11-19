@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GraphicsAlgorithms\GraphicsAlgorithms.csproj" />
+    <ProjectReference Include="..\OutputWindow\OutputWindow.csproj" />
   </ItemGroup>
 
 </Project>

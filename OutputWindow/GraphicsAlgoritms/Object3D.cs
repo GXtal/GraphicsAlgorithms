@@ -4,12 +4,16 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using Pfim;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System;
+using System.IO;
 
 namespace GraphicsAlgorithms;
 
 public class Object3D
 {
     private string pathToFile = @"C:\Users\admin\Desktop\ObjDrawer\ObjDrawer\data\HardshellTransformer";
+    
 
     private string _lastMaterialName = "";
     public string MaterialsPath { get; private set; }
@@ -127,22 +131,22 @@ public class Object3D
                         break;
                     case "map_Ka":
                         var fileName = pathToFile + "\\" + args[1] ;
-                        var tgaImage = 
+                        var tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapKa = tgaImage;
                         break;
                     case "map_Kd":
                         fileName = pathToFile + "\\" + args[1];
-                        tgaImage = GetBitmapFromFile(fileName);
+                        tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapKd = tgaImage;   
                         break;
                     case "map_Ks":
                         fileName = pathToFile + "\\" + args[1];
-                        tgaImage = GetBitmapFromFile(fileName);
+                        tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapKs = tgaImage;
                         break;
                     case "map_bump":
                         fileName = pathToFile + "\\" + args[1];
-                        tgaImage = GetBitmapFromFile(fileName);
+                        tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapNormals = tgaImage;
                         break;
                 }
@@ -153,6 +157,7 @@ public class Object3D
     public void LoadModel(string fileName)
     {
         var colorIndex = 0;
+        pathToFile = fileName.Remove(fileName.LastIndexOf('\\'));
         foreach (string line in File.ReadLines(fileName))
         {
             string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
