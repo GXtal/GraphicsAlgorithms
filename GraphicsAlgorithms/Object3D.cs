@@ -16,8 +16,6 @@ public class Object3D
     public Dictionary<String, Material> materials { get; private set; } = new();
     public List<Vector3> Vertexes { get; } = new();
     public List<Vector3> TextVertexes { get; } = new();
-    public List<Vector3> ColorVertexes { get; set; } = new();
-    public List<Vector3> Normals { get; set; } = new();
 
 
     public float PositionX { get; set; }
@@ -91,7 +89,6 @@ public class Object3D
             for (var i = 0; i < face.Count; ++i)
             {
                 var index = face[i];
-                var vertex = ColorVertexes[index];
                 vertex.X = (vertex.X > 1.0f) ? 1.0f : vertex.X;
                 vertex.Y = (vertex.Y > 1.0f) ? 1.0f : vertex.Y;
                 vertex.Z = (vertex.Z > 1.0f) ? 1.0f : vertex.Z;
@@ -99,7 +96,6 @@ public class Object3D
                 vertex.X = (vertex.X < 0.0f) ? 0.0f : vertex.X;
                 vertex.Y = (vertex.Y < 0.0f) ? 0.0f : vertex.Y;
                 vertex.Z = (vertex.Z < 0.0f) ? 0.0f : vertex.Z;
-                ColorVertexes[index] = vertex;
                 
             }
         }
@@ -211,14 +207,12 @@ public class Object3D
                         float y = float.Parse(args[2], InvariantCulture);
                         float z = float.Parse(args[3], InvariantCulture);
                         Vertexes.Add(new(x, y, z));
-                        Normals.Add(new());
                         break;
                     case "vt":
                         x = float.Parse(args[1], InvariantCulture);
                         y = float.Parse(args[2], InvariantCulture);
                         z = float.Parse(args[3], InvariantCulture);
                         TextVertexes.Add(new(x, y, z));
-                        ColorVertexes.Add(new(0, 0, 0));
                         break;
                     case "usemtl":
                         _lastMaterialName = args[1];
