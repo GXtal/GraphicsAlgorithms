@@ -53,10 +53,7 @@ public partial class MainWindow : Window
     Matrix4x4 viewPortInvert;
     bool isLightChange = false;
 
-    Stopwatch stopWatch = new Stopwatch();
-    private int frameCount = 0;
-    private int fps = 0;
-    private DispatcherTimer fpsTimer = new DispatcherTimer();
+    private float[] depthsW;
 
 
     public void EvaluateWindowCoords(Object3D model) {
@@ -76,10 +73,13 @@ public partial class MainWindow : Window
         eye = mainCamera.getCameraPosition(target.GetPosition());
         for (int i = 0; i < windowVertices.Length; i++)
         {
+            var depthW = 0f;
             var tmp = Vector4.Transform(model.Vertexes[i], modelMatrix);
             worldVertices[i] = new Vector3(tmp.X, tmp.Y, tmp.Z);
             windowVertices[i] = Vector4.Transform(model.Vertexes[i], modelViewProjectionMatrix);
+            depthW = windowVertices[i].W;
             windowVertices[i] /= windowVertices[i].W;
+            depthsW[i] = depthW;    
             windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
         }
     }
@@ -116,7 +116,7 @@ public partial class MainWindow : Window
         if (material.TextureParts.MapKs != null)
             Is = material.TextureParts.GetKsFragment(y, x);
         if (material.TextureParts.MapKd != null)
-            Id = Ia;//material.TextureParts.GetKdFragment(y, x);
+            Id = material.TextureParts.GetKdFragment(y, x);
 
         return new List<Vector3>() { Ia, Id, Is };
     }
@@ -176,7 +176,10 @@ public partial class MainWindow : Window
                 if (depth < zbuffer[y][x])
                 {
                     //for lab3
-                    var textVector = aTextDot * w + (bTextDot * u) + cTextDot * v;
+                    //modification for correct putting textures
+                    var textVector = (aTextDot * w) / depthsW[textPolygon[0]] + (bTextDot * u) / depthsW[textPolygon[1]] + cTextDot * v / depthsW[textPolygon[2]];
+                    var interpolatedOppositeDepth = w / depthsW[textPolygon[0]] + u / depthsW[textPolygon[1]] + v / depthsW[textPolygon[2]];
+                    textVector /= interpolatedOppositeDepth;
                     var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
                     var nPoint = normA * w + normB * u + normC * v;
                     if (mainModel.materials[materialString].TextureParts.MapNormals != null)
@@ -323,9 +326,11 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
-        mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\amogus.obj");
+        //mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\amogus.obj");
+        //mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\sword.obj");
+        //mainModel.LoadModel(@"C:\Users\admin\Desktop\sadds\plane.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         ScreenIntHeight = (int)MainGrid.ActualHeight;
@@ -338,6 +343,7 @@ public partial class MainWindow : Window
         target.PositionZ = mainModel.PositionZ;
 
         vn = new Vector3[mainModel.Vertexes.Count];
+        depthsW = new float[mainModel.TextVertexes.Count];
         foreach(var materialString in mainModel.materials.Keys)
         {
             var polygons = mainModel.materials[materialString].Faces;

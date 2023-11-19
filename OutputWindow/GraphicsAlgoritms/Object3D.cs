@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System;
 using System.IO;
+using System.Diagnostics.Contracts;
 
 namespace GraphicsAlgorithms;
 
@@ -178,8 +179,16 @@ public class Object3D
                     case "vt":
                         x = float.Parse(args[1], InvariantCulture);
                         y = float.Parse(args[2], InvariantCulture);
-                        z = float.Parse(args[3], InvariantCulture);
-                        TextVertexes.Add(new(x, y, z));
+                        if (args.Length > 3)
+                        {
+                            z = float.Parse(args[3], InvariantCulture);
+                            TextVertexes.Add(new(x, y, z));
+                        }
+                        else
+                        {
+                            TextVertexes.Add(new(x, y, 0f));
+                        }
+                            
                         break;
                     case "usemtl":
                         _lastMaterialName = args[1];
