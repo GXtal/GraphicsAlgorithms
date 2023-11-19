@@ -170,82 +170,22 @@ public class Object3D
                     case "map_Ka":
                         var fileName = pathToFile + "\\" + args[1] ;
                         var tgaImage = GetBitmapFromFile(fileName);
-                        foreach (var face in materials[curName].TextFaces)
-                        {
-                            var Ia = 0.0f;
-                            for (var i = 0; i < face.Count; ++i)
-                            {
-                                var index = face[i];
-                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
-                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
-                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
-                                ColorVertexes[index] += new Vector3(
-                                    materials[curName].Ka[0] * (color.R / 255.0f),
-                                    materials[curName].Ka[1] * (color.G / 255.0f),
-                                    materials[curName].Ka[2] * (color.B / 255.0f)
-                                    );
-                            }
-                        }
+                        materials[curName].TextureParts.MapKa = tgaImage;
                         break;
                     case "map_Kd":
                         fileName = pathToFile + "\\" + args[1];
                         tgaImage = GetBitmapFromFile(fileName);
-                        foreach (var face in materials[curName].TextFaces)
-                        {
-                            var Id = 0.0f;
-                            for (var i = 0; i < face.Count; ++i)
-                            {
-                                var index = face[i];
-                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
-                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
-                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
-                                ColorVertexes[index] += new Vector3(
-                                    materials[curName].Kd[0] * (color.R / 255.0f),
-                                    materials[curName].Kd[1] * (color.G / 255.0f),
-                                    materials[curName].Kd[2] * (color.B / 255.0f)
-                                    );
-                            }
-                        }
+                        materials[curName].TextureParts.MapKd = tgaImage;   
                         break;
                     case "map_Ks":
                         fileName = pathToFile + "\\" + args[1];
                         tgaImage = GetBitmapFromFile(fileName);
-                        foreach (var face in materials[curName].TextFaces)
-                        {
-                            var Ia = 0.0f;
-                            for (var i = 0; i < face.Count; ++i)
-                            {
-                                var index = face[i];
-                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
-                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
-                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
-                                ColorVertexes[index] += new Vector3(
-                                    materials[curName].Ks[0] * (color.R / 255.0f),
-                                    materials[curName].Ks[1] * (color.G / 255.0f),
-                                    materials[curName].Ks[2] * (color.B / 255.0f)
-                                    );
-                            }
-                        }
+                        materials[curName].TextureParts.MapKs = tgaImage;
                         break;
                     case "map_bump":
                         fileName = pathToFile + "\\" + args[1];
                         tgaImage = GetBitmapFromFile(fileName);
-                        foreach (var face in materials[curName].TextFaces)
-                        {
-                            var Ia = 0.0f;
-                            for (var i = 0; i < face.Count; ++i)
-                            {
-                                var index = face[i];
-                                x = TextVertexes[index].X > 1.0f ? TextVertexes[index].X - (int)TextVertexes[index].X : TextVertexes[index].X;
-                                y = TextVertexes[index].Y > 1.0f ? TextVertexes[index].Y - (int)TextVertexes[index].Y : TextVertexes[index].Y;
-                                var color = tgaImage.GetPixel((int)(y * tgaImage.Height), (int)(x * tgaImage.Width));
-                                Normals[index] = new Vector3(
-                                    (color.R / 255.0f) / 2.0f - 1.0f,
-                                    (color.G / 255.0f) / 2.0f - 1.0f,
-                                    (color.B / 255.0f) / 2.0f - 1.0f
-                                    );
-                            }
-                        }
+                        materials[curName].TextureParts.MapNormals = tgaImage;
                         break;
                 }
             }

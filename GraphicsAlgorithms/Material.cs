@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -16,6 +17,7 @@ namespace GraphicsAlgorithms
         public float Alpha { get; set; } = 1.0f;
         public List<List<int>> Faces { get; } = new();
         public List<List<int>> TextFaces { get; private set; } = new();
+        public Texture TextureParts { get; set; } = new();
 
     }
 }
