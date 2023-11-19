@@ -93,9 +93,7 @@ public partial class MainWindow : Window
         //was fixed
         var CA = cDot - aDot;
         var BA = bDot - aDot;
-        //var denominator = Vector3.Cross(CA, BA);
         var denominator = CA.X * BA.Y - CA.Y * BA.X;
-       // var eyeFromTarget = eye - target.GetPosition();
         if (denominator < 0)
         {
             return false;
@@ -107,9 +105,9 @@ public partial class MainWindow : Window
     //x and y viewport coordinates
     private List<Vector3> GetModelColor(List<int> polygon, string materialString, float x, float y)
     {
-        var Ia = new Vector3();
-        var Is = new Vector3();
-        var Id = new Vector3();
+        var Ia = new Vector3(1f, 1f, 1f);
+        var Is = new Vector3(1f, 1f, 1f);
+        var Id = new Vector3(1f, 1f, 1f);
 
         var material = mainModel.materials[materialString];
 
@@ -118,7 +116,7 @@ public partial class MainWindow : Window
         if (material.TextureParts.MapKs != null)
             Is = material.TextureParts.GetKsFragment(y, x);
         if (material.TextureParts.MapKd != null)
-            Id = material.TextureParts.GetKdFragment(y, x);
+            Id = Ia;//material.TextureParts.GetKdFragment(y, x);
 
         return new List<Vector3>() { Ia, Id, Is };
     }
@@ -146,16 +144,6 @@ public partial class MainWindow : Window
         var normA = Vector3.Normalize(Vector3.Transform(vn[polygon[0]], modelMatrix));
         var normB = Vector3.Normalize(Vector3.Transform(vn[polygon[1]], modelMatrix));
         var normC = Vector3.Normalize(Vector3.Transform(vn[polygon[2]], modelMatrix));
-
-        //for lab2
-        //var aDotWorld = worldVertices[mainModel.Faces[i][0]];
-        //var bDotWorld = worldVertices[mainModel.Faces[i][1]];
-        //var cDotWorld = worldVertices[mainModel.Faces[i][2]];
-
-        //var CAWorld = cDotWorld - aDotWorld;
-        //var BAWorld = bDotWorld - aDotWorld;
-
-        //var norm = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
 
         //Coodinates weren't fixed. Only after polygons were fixed
         var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
@@ -212,14 +200,6 @@ public partial class MainWindow : Window
                     var lightIntVector = lightSource.GetResultColor(LN, RV, partsColors, mainModel.materials[materialString].Alpha, mainModel.materials[materialString]);
                     bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
                     zbuffer[y][x] = depth;
-
-                    //for lab2
-                    //var lightVector = lightSource.getLightPosition(new Vector3(0, 0, 0));
-                    //lightVector = Vector3.Normalize(-lightVector);
-                    //var light = Vector3.Dot(norm, lightVector);
-                    //if (light < 0) light = 0;
-                    //bitmap.SetPixel(x, y, new Vector3(light, light, light));
-                    //zbuffer[y][x] = depth;
                 }
                 
             } 
@@ -272,9 +252,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        //C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj
-        //"C:\\Users\\admin\\Desktop\\Toilet.obj"
-        //"C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj"
 
     }
 
@@ -346,8 +323,9 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
+        mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\amogus.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         ScreenIntHeight = (int)MainGrid.ActualHeight;
@@ -372,15 +350,7 @@ public partial class MainWindow : Window
                 var CAWorld = cDotWorld - aDotWorld;
                 var BAWorld = bDotWorld - aDotWorld;
 
-                //var CBWorld = cDotWorld - bDotWorld;
-                //var ABWorld = aDotWorld - bDotWorld;
-
-                //var BCWorld = bDotWorld - cDotWorld;
-                //var ACWorld = aDotWorld - cDotWorld;
-
                 var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
-                // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
-                // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
 
                 vn[polygon[0]] += normA;
                 vn[polygon[1]] += normA;

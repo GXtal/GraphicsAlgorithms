@@ -67,7 +67,7 @@ namespace GraphicsAlgorithms
             x = x - MathF.Floor(x);
             y = y - MathF.Floor(y);
 
-            var color = MapKa.GetPixel((int)(x * MapKa.PixelWidth), (int)((1 - y) * MapKa.PixelHeight));
+            var color = MapKa.GetPixel((int)(x * MapKa.PixelWidth), (int)((1f - y) * MapKa.PixelHeight));
             return color;
         }
 
@@ -76,7 +76,7 @@ namespace GraphicsAlgorithms
             x = x - MathF.Floor(x);
             y = y - MathF.Floor(y);
 
-            var color = MapKd.GetPixel((int)(x * MapKd.PixelWidth), (int)((1 - y) * MapKd.PixelHeight));
+            var color = MapKd.GetPixel((int)(x * MapKd.PixelWidth), (int)((1f - y) * MapKd.PixelHeight));
             return color;
         }
 
@@ -85,7 +85,7 @@ namespace GraphicsAlgorithms
             x = x - MathF.Floor(x);
             y = y - MathF.Floor(y);
 
-            var color = MapKs.GetPixel((int)(x * MapKs.PixelWidth), (int)((1 - y) * MapKs.PixelHeight));
+            var color = MapKs.GetPixel((int)(x * MapKs.PixelWidth), (int)((1f - y) * MapKs.PixelHeight));
             return color;
         }
 
@@ -94,7 +94,7 @@ namespace GraphicsAlgorithms
             x = x - MathF.Floor(x);
             y = y - MathF.Floor(y);
 
-            var color = MapNormals.GetPixel((int)(x * MapNormals.PixelWidth), (int)((1 - y) * MapNormals.PixelHeight));
+            var color = MapNormals.GetPixel((int)(x * MapNormals.PixelWidth), (int)((1f - y) * MapNormals.PixelHeight));
             return new Vector3(
                     color.X * 2.0f - 1.0f,
                     color.Y * 2.0f - 1.0f,

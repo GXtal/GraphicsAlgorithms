@@ -87,12 +87,13 @@ public class Object3D
         return worldMatrix;
     }
 
-    
-
-
     private void LoadPolygonData()
     {
         var curName = "";
+        if (!File.Exists(pathToFile + "\\" + MaterialsPath))
+        {
+            return;
+        }
         foreach (var line in File.ReadLines(pathToFile + "\\" +MaterialsPath))
         {
             string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -189,16 +190,30 @@ public class Object3D
                         List<int> face = new List<int>();
                         List<int> textFace = new List<int>();
 
+                                              
                         for (int i = 1; i < args.Length; i++)
                         {
                             string[] indexes = args[i].Split('/');
                             face.Add(int.Parse(indexes[0]) - 1);
                             textFace.Add(int.Parse(indexes[1]) - 1);
-                            FacesCount++;
                         }
-                        materials[_lastMaterialName].Faces.Add(face);
-                        materials[_lastMaterialName].TextFaces.Add(face);
-                        colorIndex++;
+
+                        var faceCopy = new List<int>(face);
+                        List<List<int>> triangulatedFace = EarClipping(face);
+                        List<List<int>> triangulatedTextFace = new List<List<int>>(); //= EarClipping(textFace);
+                        for (var i = 0; i < triangulatedFace.Count; ++i)
+                        {
+                            triangulatedTextFace.Add(new List<int>());
+                            for (var j = 0; j  < triangulatedFace[i].Count; ++j)
+                            {
+                                var index = faceCopy.FindIndex(t => t == triangulatedFace[i][j]);
+                                triangulatedTextFace[i].Add(textFace[index]);
+                            }
+                        }
+
+                        materials[_lastMaterialName].Faces.AddRange(triangulatedFace);
+                        materials[_lastMaterialName].TextFaces.AddRange(triangulatedTextFace);
+                        FacesCount += triangulatedFace.Count;
                         break;
                 }
 
@@ -206,5 +221,84 @@ public class Object3D
         }
         LoadPolygonData();
         Console.Write(0);
+    }
+
+    private bool IsCounterClockwise(List<int> polygon)
+    {
+        float signedArea = 0;
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            Vector3 current = Vertexes[polygon[i]];
+            Vector3 next = Vertexes[polygon[(i + 1) % polygon.Count]];
+            signedArea += (next.X - current.X) * (next.Y + current.Y);
+        }
+
+        if (signedArea < 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private List<List<int>> EarClipping(List<int> polygon)
+    {
+        List<List<int>> triangles = new List<List<int>>();
+
+        while (polygon.Count > 3)
+        {
+            int earIndex = FindEar(polygon);
+            if (earIndex == -1)
+            {
+                break;
+            }
+
+            List<int> triangle = new List<int>
+            {
+                polygon[(earIndex - 1 + polygon.Count) % polygon.Count],
+                polygon[earIndex],
+                polygon[(earIndex + 1) % polygon.Count]
+            };
+
+            triangles.Add(triangle);
+
+            // Remove the ear vertex
+            polygon.RemoveAt(earIndex);
+        }
+
+        // Add the last triangle
+        triangles.Add(polygon);
+
+        return triangles;
+    }
+
+    private bool IsEar(List<int> polygon, int earIndex)
+    {
+        int numVertices = polygon.Count;
+        int prevIndex = (earIndex - 1 + numVertices) % numVertices;
+        int nextIndex = (earIndex + 1) % numVertices;
+
+        // Check if the angle at the ear candidate is convex
+        Vector3 prevVector = Vertexes[polygon[earIndex]] - Vertexes[polygon[prevIndex]];
+        Vector3 nextVector = Vertexes[polygon[nextIndex]] - Vertexes[polygon[earIndex]];
+
+
+
+        Vector3 crossProduct = Vector3.Cross(prevVector, nextVector);
+
+        return (crossProduct.Z >= 0 && !IsCounterClockwise(polygon))
+            || (crossProduct.Z <= 0 && IsCounterClockwise(polygon)); // Assuming Z is up in your coordinate system
+    }
+
+    private int FindEar(List<int> polygon)
+    {
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            if (IsEar(polygon, i))
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 }
