@@ -1,21 +1,10 @@
 ﻿using GraphicsAlgorithms;
 using Rasterization;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace OutputWindow;
@@ -25,7 +14,7 @@ namespace OutputWindow;
 public partial class MainWindow : Window
 {
     bool isMouseDown = false;
-    Point oldP = new Point(0, 0);   
+    Point oldP = new Point(0, 0);
     float ScreenWidth { get; set; }
     float ScreenHeight { get; set; }
 
@@ -59,7 +48,8 @@ public partial class MainWindow : Window
     private DispatcherTimer fpsTimer = new DispatcherTimer();
 
 
-    public void EvaluateWindowCoords(Object3D model) {
+    public void EvaluateWindowCoords(Object3D model)
+    {
         modelMatrix = model.CreateWorldMatrix();
         var viewMatrix = mainCamera.CreateObserverMatrix(target.GetPosition());
         Matrix4x4.Invert(modelMatrix, out modelMatrixInvert);
@@ -94,7 +84,7 @@ public partial class MainWindow : Window
         var BA = aDot - bDot;
         //var denominator = Vector3.Cross(CA, BA);
         var denominator = CA.X * BA.Y - CA.Y * BA.X;
-       // var eyeFromTarget = eye - target.GetPosition();
+        // var eyeFromTarget = eye - target.GetPosition();
         if (denominator > 0)
         {
             faceCanBeDrawn[i] = false;
@@ -121,7 +111,7 @@ public partial class MainWindow : Window
 
 
         var CA = cDot - bDot;
-        var BA = aDot - bDot;   
+        var BA = aDot - bDot;
 
         //for lab3
         var normA = Vector3.Normalize(Vector3.Transform(vn[mainModel.Faces[i][0]], modelMatrix));
@@ -140,7 +130,7 @@ public partial class MainWindow : Window
 
 
         var denominator = (CA.X * BA.Y - CA.Y * BA.X);
-        for(var y = minY; y <= maxY; ++y)
+        for (var y = minY; y <= maxY; ++y)
         {
             for (var x = minX; x <= maxX; ++x)
             {
@@ -171,14 +161,14 @@ public partial class MainWindow : Window
                     //for lab3
                     var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
                     var nPoint = normA * w + normB * u + normC * v;
-                    var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
+                    var lightVector = lightSource.getLightPosition(new Vector3(0, 0, 0));
                     var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
                     lightVector = Vector3.Normalize(lightVector - FragPos3);
                     var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
                     var LN = Vector3.Dot(nPoint, lightVector);
                     var defferedLightVector = lightVector - 2 * LN * nPoint;
                     var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
-                    if (RV < 0 ) RV = 0.0f;
+                    if (RV < 0) RV = 0.0f;
                     if (LN < 0) LN = 0.0f;
                     var lightIntVector = lightSource.GetResultColor(LN, RV, mainModel.FacesColor[i]);
                     bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
@@ -192,15 +182,15 @@ public partial class MainWindow : Window
                     //bitmap.SetPixel(x, y, new Vector3(light, light, light));
                     //zbuffer[y][x] = depth;
                 }
-                
-            } 
+
+            }
         }
     }
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
 
-       // stopWatch.Restart();
+        // stopWatch.Restart();
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
             for (var j = 0; j < bitmap.PixelWidth; ++j)
@@ -227,7 +217,7 @@ public partial class MainWindow : Window
 
         Console.WriteLine();
 
-       // stopWatch.Stop();
+        // stopWatch.Stop();
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
@@ -310,8 +300,10 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
+        //mainModel.LoadModel("F:\\7 sem\\AKG\\amogus.obj");
+        mainModel.LoadModel("F:\\7 sem\\AKG\\Hardshell.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         ScreenIntHeight = (int)MainGrid.ActualHeight;
@@ -341,8 +333,8 @@ public partial class MainWindow : Window
             //var ACWorld = aDotWorld - cDotWorld;
 
             var normA = Vector3.Normalize(Vector3.Cross(CAWorld, BAWorld));
-           // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
-           // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
+            // var normB = Vector3.Normalize(Vector3.Cross(ABWorld, CBWorld));
+            // var normC = Vector3.Normalize(Vector3.Cross(BCWorld, ACWorld));
 
             vn[mainModel.Faces[i][0]] += normA;
             vn[mainModel.Faces[i][1]] += normA;
@@ -361,10 +353,10 @@ public partial class MainWindow : Window
             for (var j = 0; j < (int)ScreenWidth; ++j)
             {
                 zbuffer[i][j] = float.MaxValue;
-            }   
+            }
         }
-        
-       
+
+
         //CompositionTarget.Rendering += CompositionTarget_Rendering;
 
         // Set up the FPS timer (for updating the text block)
@@ -410,7 +402,7 @@ public partial class MainWindow : Window
 
         isMouseDown = true;
         var p = e.GetPosition(MainImage);
-        oldP = p; 
+        oldP = p;
     }
 
     private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -449,7 +441,7 @@ public partial class MainWindow : Window
         {
             lightSource.changeDistance(e.Delta / 10f);
         }
-        
+
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }
