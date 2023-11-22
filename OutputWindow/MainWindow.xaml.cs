@@ -105,9 +105,9 @@ public partial class MainWindow : Window
     //x and y viewport coordinates
     private List<Vector3> GetModelColor(List<int> polygon, string materialString, float x, float y)
     {
-        var Ia = new Vector3(1f, 1f, 1f);
-        var Is = new Vector3(1f, 1f, 1f);
-        var Id = new Vector3(1f, 1f, 1f);
+        var Ia = new Vector3(0f, 0f, 0f);
+        var Is = new Vector3(0f, 0f, 0f);
+        var Id = new Vector3(0f, 0f, 0f);
 
         var material = mainModel.materials[materialString];
 
@@ -177,8 +177,9 @@ public partial class MainWindow : Window
                 {
                     //for lab3
                     //modification for correct putting textures
-                    var textVector = (aTextDot * w) / depthsW[textPolygon[0]] + (bTextDot * u) / depthsW[textPolygon[1]] + cTextDot * v / depthsW[textPolygon[2]];
-                    var interpolatedOppositeDepth = w / depthsW[textPolygon[0]] + u / depthsW[textPolygon[1]] + v / depthsW[textPolygon[2]];
+                    //var textVector = (aTextDot * w)  + (bTextDot * u) + cTextDot * v;
+                    var textVector = (aTextDot * w) / depthsW[polygon[0]] + (bTextDot * u) / depthsW[polygon[1]] + cTextDot * v / depthsW[polygon[2]];
+                    var interpolatedOppositeDepth = w / depthsW[polygon[0]] + u / depthsW[polygon[1]] + v / depthsW[polygon[2]];
                     textVector /= interpolatedOppositeDepth;
                     var fragPos = Vector4.Transform(P, viewPortInvert * pojectionInvert * viewMatrixInvert);
                     var nPoint = normA * w + normB * u + normC * v;
@@ -326,10 +327,10 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
+        //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\amogus.obj");
-        //mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\sword.obj");
+        mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Cyber Mancubus\mancubus.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\sadds\plane.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
@@ -343,7 +344,7 @@ public partial class MainWindow : Window
         target.PositionZ = mainModel.PositionZ;
 
         vn = new Vector3[mainModel.Vertexes.Count];
-        depthsW = new float[mainModel.TextVertexes.Count];
+        depthsW = new float[mainModel.Vertexes.Count];
         foreach(var materialString in mainModel.materials.Keys)
         {
             var polygons = mainModel.materials[materialString].Faces;
