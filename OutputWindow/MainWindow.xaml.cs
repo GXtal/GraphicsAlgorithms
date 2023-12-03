@@ -2,21 +2,9 @@
 using Rasterization;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 
 namespace OutputWindow;
 /// <summary>
@@ -25,7 +13,7 @@ namespace OutputWindow;
 public partial class MainWindow : Window
 {
     bool isMouseDown = false;
-    Point oldP = new Point(0, 0);   
+    Point oldP = new Point(0, 0);
     float ScreenWidth { get; set; }
     float ScreenHeight { get; set; }
 
@@ -56,7 +44,8 @@ public partial class MainWindow : Window
     private float[] depthsW;
 
 
-    public void EvaluateWindowCoords(Object3D model) {
+    public void EvaluateWindowCoords(Object3D model)
+    {
         modelMatrix = model.CreateWorldMatrix();
         var viewMatrix = mainCamera.CreateObserverMatrix(target.GetPosition());
         Matrix4x4.Invert(modelMatrix, out modelMatrixInvert);
@@ -79,7 +68,7 @@ public partial class MainWindow : Window
             windowVertices[i] = Vector4.Transform(model.Vertexes[i], modelViewProjectionMatrix);
             depthW = windowVertices[i].W;
             windowVertices[i] /= windowVertices[i].W;
-            depthsW[i] = depthW;    
+            depthsW[i] = depthW;
             windowVertices[i] = Vector4.Transform(windowVertices[i], viewPortMatrix);
         }
     }
@@ -101,19 +90,19 @@ public partial class MainWindow : Window
 
         return true;
     }
-    
+
     //x and y viewport coordinates
     private List<Vector3> GetModelColor(List<int> polygon, string materialString, float x, float y)
     {
         var Ia = new Vector3(0f, 0f, 0f);
         var Is = new Vector3(0f, 0f, 0f);
         var Id = new Vector3(0f, 0f, 0f);
-        var Ie = new Vector3(0f, 0f, 0f);    
+        var Ie = new Vector3(0f, 0f, 0f);
 
         var material = mainModel.materials[materialString];
 
         if (material.TextureParts.MapKa != null)
-            Ia = material.TextureParts.GetKaFragment(y,x);
+            Ia = material.TextureParts.GetKaFragment(y, x);
         if (material.TextureParts.MapKs != null)
             Is = material.TextureParts.GetKsFragment(y, x);
         if (material.TextureParts.MapKd != null)
@@ -141,7 +130,7 @@ public partial class MainWindow : Window
 
 
         var CA = cDot - aDot;
-        var BA = bDot - aDot;   
+        var BA = bDot - aDot;
 
         //for lab3
         var normA = Vector3.Normalize(Vector3.Transform(vn[polygon[0]], modelMatrix));
@@ -150,7 +139,7 @@ public partial class MainWindow : Window
 
         //Coodinates weren't fixed. Only after polygons were fixed
         var denominator = Math.Abs((CA.X * BA.Y - CA.Y * BA.X));
-        for(var y = minY; y <= maxY; ++y)
+        for (var y = minY; y <= maxY; ++y)
         {
             for (var x = minX; x <= maxX; ++x)
             {
@@ -191,32 +180,32 @@ public partial class MainWindow : Window
                         nPoint = mainModel.materials[materialString].TextureParts.GetNormalFragment(textVector.Y, textVector.X);
                         // do something
                     }
-                    var lightVector = lightSource.getLightPosition(new Vector3(0,0,0));
+                    var lightVector = lightSource.getLightPosition(new Vector3(0, 0, 0));
                     var FragPos3 = new Vector3(fragPos.X, fragPos.Y, fragPos.Z);
                     lightVector = Vector3.Normalize(lightVector - FragPos3);
                     var eyeFromFrag = Vector3.Normalize(eye - FragPos3);
                     var LN = Vector3.Dot(nPoint, lightVector);
                     var defferedLightVector = lightVector - 2 * LN * nPoint;
                     var RV = Vector3.Dot(defferedLightVector, eyeFromFrag);
-                    if (RV < 0 ) RV = 0.0f;
+                    if (RV < 0) RV = 0.0f;
                     if (LN < 0) LN = 0.0f;
-                    
-                    
+
+
                     var partsColors = GetModelColor(polygon, materialString, textVector.X, textVector.Y);
 
                     var lightIntVector = lightSource.GetResultColor(LN, RV, partsColors, mainModel.materials[materialString].Alpha, mainModel.materials[materialString]);
                     bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
                     zbuffer[y][x] = depth;
                 }
-                
-            } 
+
+            }
         }
     }
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
 
-       // stopWatch.Restart();
+        // stopWatch.Restart();
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
             for (var j = 0; j < bitmap.PixelWidth; ++j)
@@ -348,10 +337,10 @@ public partial class MainWindow : Window
 
         vn = new Vector3[mainModel.Vertexes.Count];
         depthsW = new float[mainModel.Vertexes.Count];
-        foreach(var materialString in mainModel.materials.Keys)
+        foreach (var materialString in mainModel.materials.Keys)
         {
             var polygons = mainModel.materials[materialString].Faces;
-            foreach(var polygon in polygons)
+            foreach (var polygon in polygons)
             {
                 var aDotWorld = mainModel.Vertexes[polygon[0]];
                 var bDotWorld = mainModel.Vertexes[polygon[1]];
@@ -380,7 +369,7 @@ public partial class MainWindow : Window
             for (var j = 0; j < (int)ScreenWidth; ++j)
             {
                 zbuffer[i][j] = float.MaxValue;
-            }   
+            }
         }
 
         EvaluateWindowCoords(mainModel);
@@ -420,7 +409,7 @@ public partial class MainWindow : Window
 
         isMouseDown = true;
         var p = e.GetPosition(MainImage);
-        oldP = p; 
+        oldP = p;
     }
 
     private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -459,7 +448,7 @@ public partial class MainWindow : Window
         {
             lightSource.changeDistance(-e.Delta / 10f);
         }
-        
+
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }

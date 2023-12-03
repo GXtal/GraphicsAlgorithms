@@ -1,20 +1,15 @@
-﻿using System.Numerics;
-using static System.Globalization.CultureInfo;
-using System.Drawing;
-using System.Drawing.Imaging;
-using Pfim;
-using System.Runtime.InteropServices;
+﻿using System;
 using System.Collections.Generic;
-using System;
 using System.IO;
-using System.Diagnostics.Contracts;
+using System.Numerics;
+using static System.Globalization.CultureInfo;
 
 namespace GraphicsAlgorithms;
 
 public class Object3D
 {
     private string pathToFile = @"C:\Users\admin\Desktop\ObjDrawer\ObjDrawer\data\HardshellTransformer";
-    
+
 
     private string _lastMaterialName = "";
     public string MaterialsPath { get; private set; }
@@ -26,7 +21,7 @@ public class Object3D
 
     public float PositionX { get; set; }
     public float PositionY { get; set; }
-    public  float PositionZ { get; set; }
+    public float PositionZ { get; set; }
     public float RotationX { get; set; }
     public float RotationY { get; set; }
     public float RotationZ { get; set; }
@@ -35,7 +30,7 @@ public class Object3D
     public float ScaleZ { get; set; } = 1;
 
     private Matrix4x4 CreateObserverMatrixB(Vector3 cameraPosition)
-    {              
+    {
         Vector3 target = new Vector3(0f, 0f, 0f);
         Vector3 up = new Vector3(0f, 1f, 0f);
         Vector3 zAxis = Vector3.Normalize(cameraPosition - target);
@@ -43,10 +38,10 @@ public class Object3D
         Vector3 yAxis = up;
 
         return Matrix4x4.Transpose(new Matrix4x4(
-            xAxis.X,    xAxis.Y,    xAxis.Z,    -Vector3.Dot(xAxis, cameraPosition),
-            yAxis.X,    yAxis.Y,    yAxis.Z,    -Vector3.Dot(yAxis, cameraPosition),
-            zAxis.X,    zAxis.Y,    zAxis.Z,    -Vector3.Dot(zAxis, cameraPosition),
-            0f,         0f,         0f,         1f));
+            xAxis.X, xAxis.Y, xAxis.Z, -Vector3.Dot(xAxis, cameraPosition),
+            yAxis.X, yAxis.Y, yAxis.Z, -Vector3.Dot(yAxis, cameraPosition),
+            zAxis.X, zAxis.Y, zAxis.Z, -Vector3.Dot(zAxis, cameraPosition),
+            0f, 0f, 0f, 1f));
     }
 
     public Matrix4x4 CreateWorldMatrix()
@@ -59,7 +54,7 @@ public class Object3D
         Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationX(RotationX) *
                                    Matrix4x4.CreateRotationY(RotationY) *
                                    Matrix4x4.CreateRotationZ(RotationZ);
-        
+
         Matrix4x4 worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
 
 
@@ -75,10 +70,10 @@ public class Object3D
                 0f, 0f, 0f, 1f));
 
         Matrix4x4 scaleMatrix = Matrix4x4.Transpose(new Matrix4x4(
-                ScaleX, 0f,     0f,     0f,
-                0f,     ScaleY, 0f,     0f,
-                0f,     0f,     ScaleZ, 0f,
-                0f,     0f,     0f,     1.0f));
+                ScaleX, 0f, 0f, 0f,
+                0f, ScaleY, 0f, 0f,
+                0f, 0f, ScaleZ, 0f,
+                0f, 0f, 0f, 1.0f));
 
         Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationX(RotationX) *
                                    Matrix4x4.CreateRotationY(RotationY) *
@@ -95,7 +90,7 @@ public class Object3D
         {
             return;
         }
-        foreach (var line in File.ReadLines(pathToFile + "\\" +MaterialsPath))
+        foreach (var line in File.ReadLines(pathToFile + "\\" + MaterialsPath))
         {
             string[] args = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (args.Length > 0)
@@ -114,7 +109,7 @@ public class Object3D
                         float x = float.Parse(args[1], InvariantCulture);
                         float y = float.Parse(args[2], InvariantCulture);
                         float z = float.Parse(args[3], InvariantCulture);
-                        materials[curName].Ka = new float[] { x, y, z }; 
+                        materials[curName].Ka = new float[] { x, y, z };
                         break;
                     case "Kd":
                         x = float.Parse(args[1], InvariantCulture);
@@ -132,14 +127,14 @@ public class Object3D
                         materials[curName].Alpha = float.Parse(args[1], InvariantCulture);
                         break;
                     case "map_Ka":
-                        var fileName = pathToFile + "\\" + args[1] ;
+                        var fileName = pathToFile + "\\" + args[1];
                         var tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapKa = tgaImage;
                         break;
                     case "map_Kd":
                         fileName = pathToFile + "\\" + args[1];
                         tgaImage = Texture.GetBitmapFromFile(fileName);
-                        materials[curName].TextureParts.MapKd = tgaImage;   
+                        materials[curName].TextureParts.MapKd = tgaImage;
                         break;
                     case "map_Ke":
                         fileName = pathToFile + "\\" + args[1];
@@ -193,7 +188,7 @@ public class Object3D
                         {
                             TextVertexes.Add(new(x, y, 0f));
                         }
-                            
+
                         break;
                     case "usemtl":
                         _lastMaterialName = args[1];
@@ -204,7 +199,7 @@ public class Object3D
                         List<int> face = new List<int>();
                         List<int> textFace = new List<int>();
 
-                                              
+
                         for (int i = 1; i < args.Length; i++)
                         {
                             string[] indexes = args[i].Split('/');
@@ -218,7 +213,7 @@ public class Object3D
                         for (var i = 0; i < triangulatedFace.Count; ++i)
                         {
                             triangulatedTextFace.Add(new List<int>());
-                            for (var j = 0; j  < triangulatedFace[i].Count; ++j)
+                            for (var j = 0; j < triangulatedFace[i].Count; ++j)
                             {
                                 var index = faceCopy.FindIndex(t => t == triangulatedFace[i][j]);
                                 triangulatedTextFace[i].Add(textFace[index]);
