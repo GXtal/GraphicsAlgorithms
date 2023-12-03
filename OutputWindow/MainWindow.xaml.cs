@@ -1,4 +1,5 @@
 ﻿using GraphicsAlgorithms;
+using OutputWindow.GraphicsAlgoritms;
 using Rasterization;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ public partial class MainWindow : Window
     int ScreenIntHeight { get; set; }
 
     Object3D mainModel = new Object3D();
+    DynamicObject animationObjext = new DynamicObject();
+
     Camera mainCamera = new Camera();
     Target target = new Target();
     LightSource lightSource = new LightSource();
@@ -42,7 +45,6 @@ public partial class MainWindow : Window
     bool isLightChange = false;
 
     private float[] depthsW;
-
 
     public void EvaluateWindowCoords(Object3D model)
     {
@@ -197,14 +199,12 @@ public partial class MainWindow : Window
                     bitmap.SetPixel(x, y, new Vector3(lightIntVector.X, lightIntVector.Y, lightIntVector.Z));
                     zbuffer[y][x] = depth;
                 }
-
             }
         }
     }
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
-
         // stopWatch.Restart();
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
@@ -237,12 +237,10 @@ public partial class MainWindow : Window
             }
         }
 
-        Console.WriteLine();
-
-
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
         bitmap.Source.Unlock();
+        animationObjext.NextCombination();
     }
 
     public MainWindow()
@@ -279,6 +277,9 @@ public partial class MainWindow : Window
             //    lightSource.SpecularAlpha -= 1f;
             //    if (lightSource.SpecularAlpha < 1f) lightSource.SpecularAlpha = 1.0f;
             //    break;
+            case Key.Space:
+                animationObjext.NextCombination();
+                break;
             case Key.K:
                 lightSource.SpecularIntensity += 0.05f;
                 if (lightSource.SpecularIntensity > 1f) lightSource.SpecularIntensity = 1.0f;
@@ -322,8 +323,12 @@ public partial class MainWindow : Window
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Mimic Chest\model.obj");
-        mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Cyber Mancubus\mancubus.obj");
+        //mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Cyber Mancubus\mancubus.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\sadds\plane.obj");
+        //mainModel.LoadModel(@"F:\7 sem\AKG\Cyber Mancubus\mancubus.obj");
+        //mainModel.LoadModel(@"F:\7 sem\AKG\Tyrant\Tyrant0.obj");
+        animationObjext.LoadFolder("F:\\7 sem\\AKG\\Tyrant", "Tyrant");
+        mainModel = animationObjext.exportedObject;
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         ScreenIntHeight = (int)MainGrid.ActualHeight;
@@ -452,4 +457,6 @@ public partial class MainWindow : Window
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
     }
+
+
 }

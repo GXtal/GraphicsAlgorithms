@@ -10,7 +10,6 @@ public class Object3D
 {
     private string pathToFile = @"C:\Users\admin\Desktop\ObjDrawer\ObjDrawer\data\HardshellTransformer";
 
-
     private string _lastMaterialName = "";
     public string MaterialsPath { get; private set; }
     public Dictionary<String, Material> materials { get; private set; } = new();
