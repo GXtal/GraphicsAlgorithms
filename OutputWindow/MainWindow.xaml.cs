@@ -108,6 +108,7 @@ public partial class MainWindow : Window
         var Ia = new Vector3(0f, 0f, 0f);
         var Is = new Vector3(0f, 0f, 0f);
         var Id = new Vector3(0f, 0f, 0f);
+        var Ie = new Vector3(0f, 0f, 0f);    
 
         var material = mainModel.materials[materialString];
 
@@ -117,8 +118,10 @@ public partial class MainWindow : Window
             Is = material.TextureParts.GetKsFragment(y, x);
         if (material.TextureParts.MapKd != null)
             Id = material.TextureParts.GetKdFragment(y, x);
+        if (material.TextureParts.MapKe != null)
+            Ie = material.TextureParts.GetKeFragment(y, x);
 
-        return new List<Vector3>() { Ia, Id, Is };
+        return new List<Vector3>() { Ia, Id, Is, Ie };
     }
 
     public void RasterizationFace(List<int> polygon, List<int> textPolygon, string materialString)
@@ -329,7 +332,7 @@ public partial class MainWindow : Window
     {
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\HardshellTransformer\\Hardshell.obj");
         //mainModel.LoadModel("C:\\Users\\admin\\Desktop\\ObjDrawer\\ObjDrawer\\data\\Torque Twister\\Torque Twister.obj");
-        //mainModel.LoadModel(@"C:\Users\admin\Desktop\akg\amogus.obj");
+        //mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Mimic Chest\model.obj");
         mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Cyber Mancubus\mancubus.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\sadds\plane.obj");
         ScreenWidth = (float)MainGrid.ActualWidth;
@@ -450,11 +453,11 @@ public partial class MainWindow : Window
     {
         if (!isLightChange)
         {
-            mainCamera.changeDistance(e.Delta / 10f);
+            mainCamera.changeDistance(-e.Delta / 10f);
         }
         else
         {
-            lightSource.changeDistance(e.Delta / 10f);
+            lightSource.changeDistance(-e.Delta / 10f);
         }
         
         EvaluateWindowCoords(mainModel);

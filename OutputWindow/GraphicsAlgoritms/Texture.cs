@@ -15,6 +15,7 @@ namespace GraphicsAlgorithms
         public Pbgra32Bitmap MapKa { get; set; }
         public Pbgra32Bitmap MapKd { get; set; }
         public Pbgra32Bitmap MapKs { get; set; }
+        public Pbgra32Bitmap MapKe { get; set; }
         public Pbgra32Bitmap MapNormals { get; set; }
 
         private static PixelFormat PixelFormat(IImage image)
@@ -86,6 +87,15 @@ namespace GraphicsAlgorithms
             y = y - MathF.Floor(y);
 
             var color = MapKs.GetPixel((int)(x * MapKs.PixelWidth), (int)((1f - y) * MapKs.PixelHeight));
+            return color;
+        }
+
+        public Vector3 GetKeFragment(float y, float x)
+        {
+            x = x - MathF.Floor(x);
+            y = y - MathF.Floor(y);
+
+            var color = MapKe.GetPixel((int)(x * MapKe.PixelWidth), (int)((1f - y) * MapKe.PixelHeight));
             return color;
         }
 

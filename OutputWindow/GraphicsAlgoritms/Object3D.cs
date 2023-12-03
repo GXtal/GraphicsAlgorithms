@@ -141,6 +141,11 @@ public class Object3D
                         tgaImage = Texture.GetBitmapFromFile(fileName);
                         materials[curName].TextureParts.MapKd = tgaImage;   
                         break;
+                    case "map_Ke":
+                        fileName = pathToFile + "\\" + args[1];
+                        tgaImage = Texture.GetBitmapFromFile(fileName);
+                        materials[curName].TextureParts.MapKe = tgaImage;
+                        break;
                     case "map_Ks":
                         fileName = pathToFile + "\\" + args[1];
                         tgaImage = Texture.GetBitmapFromFile(fileName);
