@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GraphicsAlgorithms
 {
@@ -14,7 +9,7 @@ namespace GraphicsAlgorithms
         public float Znear { get; set; } = 1f;
         public float Zfar { get; set; } = 100.0f;
 
-        float distanceToTarget = 1500.0f;
+        float distanceToTarget = 30.0f;
         float angleY = 0;
         float angleX = (float)(Math.PI / 2);
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OutputWindow"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" MouseDown="Window_MouseDown" MouseUp="Window_MouseUp" MouseMove="Window_MouseMove" MouseWheel="Window_MouseWheel">
+        Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" MouseDown="Window_MouseDown" MouseUp="Window_MouseUp" MouseMove="Window_MouseMove" MouseWheel="Window_MouseWheel" Closing="Window_Closing">
     <Grid x:Name="MainGrid">
 
         <Image x:Name="MainImage">

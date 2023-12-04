@@ -4,6 +4,7 @@ using Rasterization;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -45,6 +46,9 @@ public partial class MainWindow : Window
     bool isLightChange = false;
 
     private float[] depthsW;
+
+    Task timerTask;
+    bool stopTimer;
 
     public void EvaluateWindowCoords(Object3D model)
     {
@@ -205,7 +209,8 @@ public partial class MainWindow : Window
 
     public void DrawModel(Vector4[] windowVertices, Object3D obj)
     {
-        // stopWatch.Restart();
+        bitmap.Source.Lock();
+
         for (var i = 0; i < bitmap.PixelHeight; ++i)
         {
             for (var j = 0; j < bitmap.PixelWidth; ++j)
@@ -214,7 +219,6 @@ public partial class MainWindow : Window
             }
         }
 
-        bitmap.Source.Lock();
         for (var i = 0; i < zbuffer.Length; i++)
         {
             for (var j = 0; j < ScreenIntWidth; ++j)
@@ -239,8 +243,8 @@ public partial class MainWindow : Window
 
         //Parallel.For(0, obj.Faces.Count, RasterizationFace); //was changed
         bitmap.Source.AddDirtyRect(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
-        bitmap.Source.Unlock();
         animationObjext.NextCombination();
+        bitmap.Source.Unlock();
     }
 
     public MainWindow()
@@ -326,9 +330,11 @@ public partial class MainWindow : Window
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\Models\Cyber Mancubus\mancubus.obj");
         //mainModel.LoadModel(@"C:\Users\admin\Desktop\sadds\plane.obj");
         //mainModel.LoadModel(@"F:\7 sem\AKG\Cyber Mancubus\mancubus.obj");
+
         //mainModel.LoadModel(@"F:\7 sem\AKG\Tyrant\Tyrant0.obj");
         animationObjext.LoadFolder("F:\\7 sem\\AKG\\Tyrant", "Tyrant");
         mainModel = animationObjext.exportedObject;
+
         ScreenWidth = (float)MainGrid.ActualWidth;
         ScreenHeight = (float)MainGrid.ActualHeight;
         ScreenIntHeight = (int)MainGrid.ActualHeight;
@@ -379,6 +385,9 @@ public partial class MainWindow : Window
 
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
+
+        timerTask = new Task(() => { AlwaysDraw(); });
+        timerTask.Start();
     }
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -458,5 +467,19 @@ public partial class MainWindow : Window
         DrawModel(windowVertices, mainModel);
     }
 
+    private void AlwaysDraw()
+    {
+        while (!stopTimer)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DrawModel(windowVertices, mainModel);
+            }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+    }
 
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        stopTimer = true;
+    }
 }
