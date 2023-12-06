@@ -386,6 +386,8 @@ public partial class MainWindow : Window
         EvaluateWindowCoords(mainModel);
         DrawModel(windowVertices, mainModel);
 
+
+        //new Thread(AlwaysDraw).Start();
         timerTask = new Task(() => { AlwaysDraw(); });
         timerTask.Start();
     }
@@ -473,6 +475,7 @@ public partial class MainWindow : Window
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                EvaluateWindowCoords(mainModel);
                 DrawModel(windowVertices, mainModel);
             }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
